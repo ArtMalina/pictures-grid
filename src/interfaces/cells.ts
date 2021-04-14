@@ -34,6 +34,8 @@ export enum CartEvents {
     Save = 3,
     RemoveItems = 4,
     Modify = 5,
+    ShowOwn = 6,
+    ShowOther = 7
 }
 
 export interface ICartEventData {

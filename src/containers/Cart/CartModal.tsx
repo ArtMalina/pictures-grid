@@ -50,16 +50,16 @@ const CartModal = (props: ICartModalProps) => {
             {
                 state[0] && <Modal title="Crypto tiles" width={ 770 } height={ 450 } event$={ event$ }>
                     <div className="flex-cnt item wrap content-start overflow">
-                        <div className="flex-cnt item fb-10 wrap px-2 py-3">
+                        <div className="flex-cnt item justify-start fb-10 wrap px-2 py-3">
                             {
                                 state[1].map(cellData =>
                                     <div
                                         key={ cellData.curr.cellNumber }
-                                        className="flex-cnt item wrap fb-10 align-center"
-                                        style={ { padding: '4px 2px', marginBottom: 8, backgroundColor: 'white' } }
+                                        className="flex-cnt item wrap fb-2 align-center shrink mx-1 px-3 py-4"
+                                        style={ { marginBottom: 8, backgroundColor: 'white' } }
                                     >
-                                        <div className="flex-cnt item fb-4">cell number: { cellData.curr.cellNumber + 1 }</div>
-                                        <div className="flex-cnt item fb-3"> tile point: { cellData.curr.point.join(', ') }</div>
+                                        <div className="flex-cnt item fb-4 modal_cell-item">{ cellData.curr.cellNumber + 1 }</div>
+                                        {/* <div className="flex-cnt item fb-3"> tile point: { cellData.curr.point.join(', ') }</div> */}
                                         <div className="flex-cnt item fb-3 justify-end">
                                             <Button action={ cellData } light color="error" title="X" small event$={ remove$ } />
                                         </div>

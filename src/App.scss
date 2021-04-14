@@ -117,6 +117,30 @@ header {
     padding-top: 12px;
     padding-bottom: 12px;
 }
+.mx-1 {
+    margin-left: 4px;
+    margin-right: 4px;
+}
+.mx-2 {
+    margin-left: 8px;
+    margin-right: 8px;
+}
+.mx-3 {
+    margin-left: 12px;
+    margin-right: 12px;
+}
+.my-1 {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+.my-2 {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+.my-3 {
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
 .flex-cnt {
     display: flex;
     &.column {
@@ -415,4 +439,10 @@ header {
         font-weight: 500;
         user-select: none;
     }
+}
+
+.modal_cell-item {
+    font-size: 1.2em;
+    color: #787878;
+    font-weight: bold;
 }

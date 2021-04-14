@@ -17,8 +17,30 @@ const Header = (props: IHeaderProps) => {
         <div style={ { backgroundColor: 'white', padding: '0 10px' } }>
         </div>
         <div className="flex-cnt">
-            <Button event$={ event$ } action={ { type: CartEvents.Modify, payload: [] } } light color="info" title="Modify" />
-            <Button event$={ event$ } action={ { type: CartEvents.Open, payload: [] } } color="header" title="Cart" />
+            <Button
+                event$={ event$ }
+                action={ { type: CartEvents.ShowOwn, payload: [] } }
+                light
+                color="primary"
+                title="show my"
+            />
+        </div>
+        <div className="flex-cnt">
+            <div className="flex-cnt item shrink mx-3">
+                <Button
+                    event$={ event$ }
+                    action={ { type: CartEvents.Modify, payload: [] } }
+                    light
+                    color="info"
+                    title="Modify"
+                />
+            </div>
+            <Button
+                event$={ event$ }
+                action={ { type: CartEvents.Open, payload: [] } }
+                color="header"
+                title="Cart"
+            />
         </div>
         {/* 'header' | 'base' | 'active' | 'primary' | 'secondary' | 'info' | 'error' | 'close' */ }
         {/* <div className="flex-cnt align-center item wrap fb-6">
