@@ -53,13 +53,31 @@ const App = () => {
     }, [cellEvent$]);
     useEffect(() => {
         const sub = cartEvent$.subscribe((ev) => {
-            console.log('%c cartEvent ', 'border: 1px solid green', ev);
+            console.log('%c cartEvent ', 'border: 1px solid green', ev, dataService.getState());
             if (ev.type === CartEvents.Open) {
                 cartState$.next({ type: CartEvents.Open, payload: cellEvent$.getValue().filter(t => t.mouseType === MyCanvasMouseEvents.Click) });
             }
+            if (ev.type === CartEvents.ShowOwn) {
+                const myAccount = dataService.getAccount();
+                console.log('my account: ', myAccount);
+                if (ev.status === 1) {
+                    return cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
+                }
+                cellsUpdate$.next([
+                    CellEventTypes.DisplayOwnCells,
+                    dataService.getState().getValue().tileCells
+                        .filter(tile => tile.token.owner === myAccount)
+                        .map<ICellEventData>(t => ({
+                            mouseType: MyCanvasMouseEvents.None,
+                            curr: { cellNumber: t.cellNumber, point: t.point },
+                            lastCell: { cellNumber: -1, point: [0, 0] }
+                        }))
+
+                ]);
+            }
         });
         return () => sub.unsubscribe();
-    }, [cartEvent$, cartState$, cellEvent$]);
+    }, [cartEvent$, cartState$, cellEvent$, cellsUpdate$]);
     useEffect(() => {
         const sub = cartState$.subscribe((ev) => {
             console.log('%c cartState ', 'border: 1px solid blue', ev);

@@ -41,6 +41,7 @@ export enum CartEvents {
 export interface ICartEventData {
     payload: ICellEventData[];
     type: CartEvents;
+    status?: any;
 }
 
 export interface ITileState extends ICellData {

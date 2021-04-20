@@ -6,7 +6,7 @@ import ServiceContext from '../../contexts/ServiceContext';
 
 import CanvasComponent from '../../components/Canvas';
 
-import CellsGrid, { ICellsGridEvent } from '../../components/CellsGrid';
+import CellsGrid, { CellsGridEventData, ICellsGridEvent } from '../../components/CellsGrid';
 import { getCellByClick } from '../../helpers/canvasMath';
 import { IEventProps } from '../../helpers/IEventProps';
 import { ICellData, ICellEventData, ITileState, MyCanvasMouseEvents, MyModes } from '../../interfaces/cells';
@@ -17,7 +17,10 @@ export enum CellEventTypes {
     None = 0,
     Add = 1,
     Remove = 2,
-    UpdateByContract = 3
+    UpdateByContract = 3,
+    DisplayOwnCells = 4,
+    DisplayOtherCells = 5,
+    DisplayAll = 6
 }
 
 export interface ICellsLayoutProps extends IEventProps<ICellEventData[]> {
@@ -55,6 +58,8 @@ const Component = (props: ICellsLayoutProps) => {
     const cellsLayoutSizeRef = useRef<[number, number]>([0, 0]);
     const rowsDataRef = useRef<[number, number]>([0, 0]);
 
+    const filteredCellsRef = useRef<ICellsGridEvent[]>([]);
+
     const cellTileUpdatesRef = useRef<{ [cellNumber: number]: number }>({});
 
     const canvas2dCtxInList$ = useMemo(() => new BehaviorSubject<CanvasRenderingContext2D[]>([]), []);
@@ -62,7 +67,14 @@ const Component = (props: ICellsLayoutProps) => {
 
 
     // [cells display] [cells clear] [tiles display] [tiles clear]
-    const cellsGridEvent$ = useMemo(() => new BehaviorSubject<[ICellsGridEvent[], ICellsGridEvent[], ITileState[], ITileState[]]>([[], [], [], []]), []);
+    const cellsGridEvent$ = useMemo(() => new BehaviorSubject<CellsGridEventData>({
+        displayCells: [],
+        clearCells: [],
+        displayTiles: [],
+        clearTiles: [],
+        highlightCells: [],
+        shadeCells: []
+    }), []);
 
     const contractTiles$ = useMemo(() => new BehaviorSubject<{ [id: number]: [number, ITileState] }>({}), []);
 
@@ -135,10 +147,14 @@ const Component = (props: ICellsLayoutProps) => {
             //     // const tile = val.tileCells
             // });
 
-            cellsGridEvent$.next([
-                [], [],
-                [...val.tileCells], []
-            ]);
+            cellsGridEvent$.next({
+                displayCells: [],
+                clearCells: [],
+                displayTiles: [...val.tileCells],
+                clearTiles: [],
+                highlightCells: [],
+                shadeCells: []
+            });
         });
         return () => sub.unsubscribe();
     }, [dataService, cellsGridEvent$, event$, cellsUpdate$, contractTiles$, cellTileUpdatesRef]);
@@ -148,6 +164,22 @@ const Component = (props: ICellsLayoutProps) => {
             console.log('cellsUpdate$', evType, payload);
 
             const cellEvents = event$.getValue();
+            if (evType === CellEventTypes.DisplayAll || evType === CellEventTypes.DisplayOwnCells) {
+                const unhighlightCells = evType === CellEventTypes.DisplayAll ? [...filteredCellsRef.current] : [];
+                mode$.next(evType === CellEventTypes.DisplayAll ? MyModes.Buy : MyModes.Edit);
+                filteredCellsRef.current = payload.map(t => ({
+                    cellNumber: t.curr.cellNumber,
+                    point: t.curr.point,
+                    mouseType: t.mouseType
+                }));
+                // 1. display border of selected!
+                return cellsGridEvent$.next({
+                    displayCells: [], clearCells: [...unhighlightCells],
+                    displayTiles: [], clearTiles: [],
+                    highlightCells: [...filteredCellsRef.current],
+                    shadeCells: []
+                });
+            }
 
             // TODO: update from contract event
             if (evType === CellEventTypes.UpdateByContract) {
@@ -160,15 +192,17 @@ const Component = (props: ICellsLayoutProps) => {
 
             event$.next([...afterRemoveCellEvents]);
 
-            cellsGridEvent$.next([
-                afterRemoveCellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                payload.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                [],
-                []
-            ]);
+            cellsGridEvent$.next({
+                displayCells: afterRemoveCellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+                clearCells: payload.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+                displayTiles: [],
+                clearTiles: [],
+                highlightCells: [],
+                shadeCells: []
+            });
         });
         return () => sub.unsubscribe();
-    }, [cellsUpdate$, event$, cellsGridEvent$]);
+    }, [cellsUpdate$, event$, cellsGridEvent$, mode$, filteredCellsRef]);
 
     useEffect(
         () => {
@@ -181,17 +215,25 @@ const Component = (props: ICellsLayoutProps) => {
 
                 const cellEvents = event$.getValue();
 
+                // mouse out of grid layout
                 if ((clientX - offsetLeft + scrollLeft + cellBorderWidth >= cellsLayoutSizeRef.current[0]) ||
                     (clientX <= offsetLeft) ||
                     (clientY <= offsetTop) ||
                     (clientY - offsetTop + scrollTop + cellBorderWidth >= cellsLayoutSizeRef.current[1])) {
                     const selectedCellEvents = cellEvents.filter(t => t.mouseType !== MyCanvasMouseEvents.Move);
-                    cellsGridEvent$.next([
-                        selectedCellEvents.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                        cellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Move).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                        [],
-                        []
-                    ]);
+                    cellsGridEvent$.next({
+                        displayCells: selectedCellEvents.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+                        clearCells: cellEvents
+                            .filter(t =>
+                                t.mouseType === MyCanvasMouseEvents.Move
+                                && filteredCellsRef.current.findIndex(ft => ft.cellNumber === t.curr.cellNumber) < 0
+                            )
+                            .map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+                        displayTiles: [],
+                        clearTiles: [],
+                        highlightCells: [...filteredCellsRef.current],
+                        shadeCells: []
+                    });
                     event$.next([...selectedCellEvents]);
                     return;
                 }
@@ -240,7 +282,9 @@ const Component = (props: ICellsLayoutProps) => {
                         // if MODE is EDIT and cell is not mine - skip!
                         // if MODE is BUY and cell is mine - skip!
                         // all above - if CURRENT_ADDR is not EMPTY
-                        if (MODE === MyModes.Edit && contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner !== CURRENT_ADDR) {
+                        console.log('%c ev ', 'color: green', t.curr, contractTiles[t.curr.cellNumber], MODE, CURRENT_ADDR);
+                        if (MODE === MyModes.Edit && (!contractTiles[t.curr.cellNumber] || contractTiles[t.curr.cellNumber][1].tile.owner !== CURRENT_ADDR)) {
+                            CLICK_TO_NEW_CELL = false;
                             return;
                         }
                         // TODO: click for BUYING on empty cell - is OK (yet)
@@ -307,7 +351,14 @@ const Component = (props: ICellsLayoutProps) => {
                     result.display.push({ ...newCellData, mouseType: evType });
                 }
                 if (result.display.length || result.clear.length) {
-                    cellsGridEvent$.next([[...result.display], [...result.clear], [], []]);
+                    cellsGridEvent$.next({
+                        displayCells: [...result.display],
+                        clearCells: result.clear.filter(t => filteredCellsRef.current.findIndex(ft => ft.cellNumber === t.cellNumber) < 0),
+                        displayTiles: [],
+                        clearTiles: [],
+                        highlightCells: filteredCellsRef.current.filter(t => result.display.findIndex(ct => ct.cellNumber === t.cellNumber) < 0),
+                        shadeCells: []
+                    });
                 }
                 // console.log('\nresult', { ...result });
                 event$.next([...result.finalCellEvents]);
@@ -326,6 +377,7 @@ const Component = (props: ICellsLayoutProps) => {
             currentAcc$,
             cellsGridEvent$,
             canvasMouseEvent$,
+            filteredCellsRef,
             cellBorderWidth,
             cellWidth,
             cellHeight

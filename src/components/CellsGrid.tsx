@@ -9,7 +9,16 @@ export interface ICellsGridEvent extends ICellData {
     mouseType: MyCanvasMouseEvents;
 }
 
-export interface ICellsGridProps extends IEventProps<[ICellsGridEvent[], ICellsGridEvent[], ITileState[], ITileState[]]> {
+export type CellsGridEventData = {
+    displayCells: ICellsGridEvent[],
+    clearCells: ICellsGridEvent[],
+    displayTiles: ITileState[],
+    clearTiles: ITileState[],
+    highlightCells: ICellsGridEvent[],
+    shadeCells: ICellsGridEvent[],
+};
+
+export interface ICellsGridProps extends IEventProps<CellsGridEventData> {
     cellW: number;
     cellH: number;
     cellBorderWidth: number;
@@ -29,7 +38,8 @@ enum BorderColors {
     BASE = '#000000',
     HOVERED = 'yellow',
     SELECTED = 'orange',
-    HOVER_SELECTED = '#69f0ae'
+    HOVER_SELECTED = '#69f0ae',
+    SHOW_FILTERED_TILES = 'silver'
     // HOVER_SELECTED = '#00e5ff'
     // HOVER_SELECTED = '#e64a19'
     // HOVER_SELECTED = '#76ff03'
@@ -228,7 +238,14 @@ const CellsGrid = (props: ICellsGridProps) => {
     }, [cellW, cellH, cellBorderWidth, amount, canvasSize, canvas2dCtxInList$]);
 
     useEffect(() => {
-        const sub = event$.subscribe(([displaying, clearing, tilesForDisplay, tilesForClear]) => {
+        const sub = event$.subscribe((ev) => {
+            const {
+                displayCells: displaying,
+                clearCells: clearing,
+                displayTiles: tilesForDisplay,
+                clearTiles: tilesForClear,
+                highlightCells,
+            } = ev;
             // console.log('cellsEvData: displaying', displaying);
             // console.log('cellsEvData: clearing', clearing);
             canvas2dCtxInList$.getValue().forEach(ctx2d => {
@@ -249,6 +266,9 @@ const CellsGrid = (props: ICellsGridProps) => {
                     if (!isDisplayedOneLst.length) {
                         drawCellHovering(ctx2d, { cellNumber, point }, canvasSize, [cellW, cellH], cellBorderWidth, BorderColors.BASE);
                     }
+                });
+                highlightCells.forEach(({ cellNumber, point }) => {
+                    drawCellHovering(ctx2d, { cellNumber, point }, canvasSize, [cellW, cellH], cellBorderWidth, BorderColors.SHOW_FILTERED_TILES);
                 });
                 displaying.forEach((t) => {
                     const { cellNumber, mouseType, point } = t;

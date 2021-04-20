@@ -12,7 +12,7 @@ const Header = (props: IHeaderProps) => {
     const { event$ } = props;
     return <header>
         <h1>
-            <Button noActive small light color="header" title="Hello, crypto man" />
+            <Button noActive small light color="secondary" title="Hello, crypto man" />
         </h1>
         <div style={ { backgroundColor: 'white', padding: '0 10px' } }>
         </div>
@@ -21,6 +21,7 @@ const Header = (props: IHeaderProps) => {
                 event$={ event$ }
                 action={ { type: CartEvents.ShowOwn, payload: [] } }
                 light
+                toggle={ 1 }
                 color="primary"
                 title="show my"
             />
