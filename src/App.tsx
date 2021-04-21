@@ -57,12 +57,12 @@ const App = () => {
             if (ev.type === CartEvents.Open) {
                 cartState$.next({ type: CartEvents.Open, payload: cellEvent$.getValue().filter(t => t.mouseType === MyCanvasMouseEvents.Click) });
             }
+            if (ev.type === CartEvents.ShowOther) {
+                return cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
+            }
             if (ev.type === CartEvents.ShowOwn) {
                 const myAccount = dataService.getAccount();
                 console.log('my account: ', myAccount);
-                if (ev.status === 1) {
-                    return cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
-                }
                 cellsUpdate$.next([
                     CellEventTypes.DisplayOwnCells,
                     dataService.getState().getValue().tileCells

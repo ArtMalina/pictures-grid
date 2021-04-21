@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Subject } from 'rxjs/internal/Subject';
 import Button from '../../components/Button';
 import { CartEvents, ICartEventData } from '../../interfaces/cells';
@@ -10,6 +10,25 @@ export interface IHeaderProps {
 
 const Header = (props: IHeaderProps) => {
     const { event$ } = props;
+    const downEv$ = useMemo(() => new Subject<ICartEventData & { group?: number, status?: number }>(), []);
+    const [togglesState, setToggles] = useState<[2 | 1, 2 | 1]>([1, 2]);
+    const togglesStateRef = useRef(togglesState);
+    useEffect(() => {
+        const sub = downEv$.subscribe(({ type, payload, group }) => {
+            console.log('downEv', type, payload, group);
+            console.log('downEv togglesStateRef.current', togglesStateRef.current);
+            if (type === CartEvents.ShowOwn) {
+                if (group) {
+                    const [myState, allState] = togglesStateRef.current;
+                    togglesStateRef.current = [myState === 1 ? 2 : 1, allState === 1 ? 2 : 1];
+                    setToggles(togglesStateRef.current);
+                }
+                return event$.next({ type: togglesStateRef.current[0] === 1 ? CartEvents.ShowOther : CartEvents.ShowOwn, payload });
+            }
+            event$.next({ type, payload });
+        });
+        return () => sub.unsubscribe();
+    }, [downEv$, event$, togglesStateRef]);
     return <header>
         <h1>
             <Button noActive small light color="secondary" title="Hello, crypto man" />
@@ -18,12 +37,24 @@ const Header = (props: IHeaderProps) => {
         </div>
         <div className="flex-cnt">
             <Button
-                event$={ event$ }
+                event$={ downEv$ }
                 action={ { type: CartEvents.ShowOwn, payload: [] } }
                 light
-                toggle={ 1 }
+                small
+                group={ 1 }
+                toggle={ togglesState[0] }
                 color="primary"
-                title="show my"
+                title="MY"
+            />
+            <Button
+                event$={ downEv$ }
+                action={ { type: CartEvents.ShowOwn, payload: [] } }
+                light
+                small
+                group={ 2 }
+                toggle={ togglesState[1] }
+                color="primary"
+                title="ALL"
             />
         </div>
         <div className="flex-cnt">

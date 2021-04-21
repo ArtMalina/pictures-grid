@@ -17,7 +17,7 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
         <div id="modal-overlay-cnt">
             <div id="modal-cnt" style={ { width, height, marginTop: -0.5 * height - 25, marginLeft: -0.5 * width } }>
                 <div className="header">
-                    <h2 style={ { marginLeft: 10 } }>{ title }</h2>
+                    <h2>{ title }</h2>
                     <Button
                         event$={ event$ }
                         action={ { type: CartEvents.Close, payload: [] } }
