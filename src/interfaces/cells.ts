@@ -35,14 +35,32 @@ export enum CartEvents {
     RemoveItems = 4,
     Modify = 5,
     ShowOwn = 6,
-    ShowOther = 7
+    ShowOther = 7,
+    SaveTiles = 8
 }
 
-export interface ICartEventData {
+type CartEventsOfCell = CartEvents.Close
+    | CartEvents.None
+    | CartEvents.Open
+    | CartEvents.RemoveItems
+    | CartEvents.Save
+    | CartEvents.ShowOther
+    | CartEvents.ShowOwn;
+
+type CellsEventCart = {
     payload: ICellEventData[];
-    type: CartEvents;
+    type: CartEventsOfCell;
     status?: any;
-}
+};
+
+type TilesEvenCart = {
+    payload: ITileState[];
+    type: CartEvents.Modify | CartEvents.SaveTiles;
+    status?: any;
+    groupUrl: string;
+};
+
+export type ICartEventData = CellsEventCart | TilesEvenCart;
 
 export interface ITileState extends ICellData {
     tile: ContractTileInfo;

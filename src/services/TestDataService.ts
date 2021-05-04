@@ -1,4 +1,5 @@
 ﻿import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
+import { ITileState } from "../interfaces/cells";
 import {
     AccountAddr,
     ContractTileID,
@@ -58,7 +59,7 @@ const TEST_URLS: any = {
     5: 'https://bnetcmsus-a.akamaihd.net/cms/blog_header/ci/CIGT53U8ZP6M1509744317189.jpg',
 };
 
-const BOUNDS_FOR_140 = [
+let BOUNDS_FOR_140 = [
     TILE_ID_140,
     TILE_ID_141,
     TILE_ID_142,
@@ -81,7 +82,7 @@ const BOUNDS_FOR_140 = [
     TILE_ID_195,
 ];
 
-const TEST_TILES: ContractTileInfo[] = [
+let TEST_TILES: ContractTileInfo[] = [
     {
         id: TILE_ID_1,
         owner: TEST_OWNER_ADDR,
@@ -191,7 +192,7 @@ const TEST_TILES: ContractTileInfo[] = [
 
 ];
 
-const TOKENS: ContractTokenInfo[] = [
+let TOKENS: ContractTokenInfo[] = [
     {
         id: TOKEN_ID_1,
         owner: TEST_OWNER_ADDR,
@@ -273,5 +274,30 @@ export default class DataService implements IDataService {
             })
         });
         return [...TEST_TILES];
+    }
+
+    async groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]> {
+        // 1. send to MANAGING_CONTRACT groups of tiles
+        // 2. update tiles (from TIMER, but for TEST: update manually here)
+        const sortedTiles = tiles.sort((a, b) => a.cellNumber > b.cellNumber ? 1 : -1);
+        const firstTile = sortedTiles[0];
+        console.log('%c group tiles ', 'background-color: orange; color: green', tiles);
+        if (!tiles.length) {
+            return [false, 'no tiles for grouping'];
+        }
+        TEST_TILES = TEST_TILES.reduce<ContractTileInfo[]>((acc, t) => {
+            const groupingTile = sortedTiles.find(x => x.tile.id === t.id);
+            console.log('grouping....', t.id, groupingTile);
+            return !groupingTile ? [...acc, { ...t }] : [
+                ...acc,
+                {
+                    ...t,
+                    url: firstTile.tile.id === t.id ? groupUrl : '',
+                    boundedTiles: sortedTiles.map(k => k.tile.id)
+                }
+            ];
+        }, []);
+        await this.fetchTiles();
+        return [true, ''];
     }
 }

@@ -54,6 +54,17 @@ const App = () => {
     useEffect(() => {
         const sub = cartEvent$.subscribe((ev) => {
             console.log('%c cartEvent ', 'border: 1px solid green', ev, dataService.getState());
+            if (ev.type === CartEvents.Modify) {
+                cartState$.next({
+                    type: CartEvents.Modify,
+                    payload: dataService.getState().getValue().tileCells.filter(t => {
+                        return cellEvent$.getValue().find(x =>
+                            x.mouseType === MyCanvasMouseEvents.Click
+                            && t.cellNumber === x.curr.cellNumber);
+                    }),
+                    groupUrl: ''
+                });
+            }
             if (ev.type === CartEvents.Open) {
                 cartState$.next({ type: CartEvents.Open, payload: cellEvent$.getValue().filter(t => t.mouseType === MyCanvasMouseEvents.Click) });
             }
@@ -81,8 +92,14 @@ const App = () => {
     useEffect(() => {
         const sub = cartState$.subscribe((ev) => {
             console.log('%c cartState ', 'border: 1px solid blue', ev);
+            if (ev.type === CartEvents.SaveTiles) {
+                dataService.groupTiles(ev.payload, ev.groupUrl);
+            }
             if (ev.type === CartEvents.RemoveItems) {
                 cellsUpdate$.next([CellEventTypes.Remove, [...ev.payload]]);
+            }
+            if (ev.type === CartEvents.Save) {
+                cellsUpdate$.next([CellEventTypes.UserUpdateTileGroup, [...ev.payload]]);
             }
         });
         return () => sub.unsubscribe();

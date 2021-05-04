@@ -18,12 +18,21 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
             <div id="modal-cnt" style={ { width, height, marginTop: -0.5 * height - 25, marginLeft: -0.5 * width } }>
                 <div className="header">
                     <h2>{ title }</h2>
-                    <Button
-                        event$={ event$ }
-                        action={ { type: CartEvents.Close, payload: [] } }
-                        light
-                        color="close"
-                        title="Close" />
+                    <div className="flex-cnt">
+                        <Button
+                            event$={ event$ }
+                            action={ { type: CartEvents.Save, payload: [] } }
+                            light
+                            color="active"
+                            title="Save" />
+                        <div className="flex-cnt item mx-1"></div>
+                        <Button
+                            event$={ event$ }
+                            action={ { type: CartEvents.Close, payload: [] } }
+                            light
+                            color="close"
+                            title="Close" />
+                    </div>
                 </div>
                 <div className="content">{ props.children }</div>
                 <div className="footer"></div>

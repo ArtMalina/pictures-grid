@@ -35,4 +35,5 @@ export interface IDataService {
     getTileInfo(id: ContractTileID): Promise<ContractTileInfo | undefined>;
     fetchTokenInfo(id: ContractTokenID): Promise<ContractTokenInfo>;
     fetchTiles(): Promise<ContractTileInfo[]>;
+    groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]>;
 }

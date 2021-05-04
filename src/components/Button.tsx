@@ -10,13 +10,14 @@ export interface IButtonProps<T = any> {
     toggle?: undefined | 1 | 2;
     group?: number;
     light?: boolean;
+    noBraces?: boolean;
     small?: boolean;
     color?: 'header' | 'base' | 'active' | 'primary' | 'secondary' | 'info' | 'error' | 'close';
     event$?: Subject<ICartEventData | T>;
 }
 
 const Button = (props: PropsWithChildren<IButtonProps>) => {
-    const { title, event$, toggle, noActive, light, small, color, action, group } = props;
+    const { title, event$, toggle, noActive, light, small, color, action, group, noBraces } = props;
     const onClickHandler = useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         event$ && event$.next(action ? { ...action, group } : { type: CartEvents.Close, payload: [] });
     }, [event$, action, group]);
@@ -27,9 +28,10 @@ const Button = (props: PropsWithChildren<IButtonProps>) => {
     if (group) modifiersTxt.push('btn--grouped');
     return (
         <div className={ ['btn', ...modifiersTxt].join(' ') } onClick={ onClickHandler }>
-            {  <div className="brace">[</div> }
-            <div className="btn-text">{ title || '' }{ props.children }</div>
-            {  <div className="brace">]</div> }
+            { !noBraces && <div className="brace">[</div> }
+            { !!title && <div className="btn-text">{ title || '' }</div> }
+            { props.children }
+            { !noBraces && <div className="brace">]</div> }
         </div>
     );
 };

@@ -14,18 +14,21 @@ const Header = (props: IHeaderProps) => {
     const [togglesState, setToggles] = useState<[2 | 1, 2 | 1]>([1, 2]);
     const togglesStateRef = useRef(togglesState);
     useEffect(() => {
-        const sub = downEv$.subscribe(({ type, payload, group }) => {
-            console.log('downEv', type, payload, group);
+        const sub = downEv$.subscribe((ev) => {
+            console.log('downEv', ev);
             console.log('downEv togglesStateRef.current', togglesStateRef.current);
-            if (type === CartEvents.ShowOwn) {
-                if (group) {
+            if (ev.type === CartEvents.ShowOwn) {
+                if (ev.group) {
                     const [myState, allState] = togglesStateRef.current;
                     togglesStateRef.current = [myState === 1 ? 2 : 1, allState === 1 ? 2 : 1];
                     setToggles(togglesStateRef.current);
                 }
-                return event$.next({ type: togglesStateRef.current[0] === 1 ? CartEvents.ShowOther : CartEvents.ShowOwn, payload });
+                return event$.next({
+                    type: togglesStateRef.current[0] === 1 ? CartEvents.ShowOther : CartEvents.ShowOwn,
+                    payload: ev.payload
+                });
             }
-            event$.next({ type, payload });
+            event$.next(ev);
         });
         return () => sub.unsubscribe();
     }, [downEv$, event$, togglesStateRef]);
@@ -36,26 +39,30 @@ const Header = (props: IHeaderProps) => {
         <div style={ { backgroundColor: 'white', padding: '0 10px' } }>
         </div>
         <div className="flex-cnt">
-            <Button
-                event$={ downEv$ }
-                action={ { type: CartEvents.ShowOwn, payload: [] } }
-                light
-                small
-                group={ 1 }
-                toggle={ togglesState[0] }
-                color="primary"
-                title="MY"
-            />
-            <Button
-                event$={ downEv$ }
-                action={ { type: CartEvents.ShowOwn, payload: [] } }
-                light
-                small
-                group={ 2 }
-                toggle={ togglesState[1] }
-                color="primary"
-                title="ALL"
-            />
+            <Button light small color="primary" title="FILTER MY">
+                <Button
+                    event$={ downEv$ }
+                    action={ { type: CartEvents.ShowOwn, payload: [] } }
+                    light
+                    small
+                    noBraces
+                    group={ 1 }
+                    toggle={ togglesState[0] }
+                    color="primary"
+                    title="YES"
+                />
+                <Button
+                    event$={ downEv$ }
+                    action={ { type: CartEvents.ShowOwn, payload: [] } }
+                    light
+                    small
+                    noBraces
+                    group={ 2 }
+                    toggle={ togglesState[1] }
+                    color="primary"
+                    title="NO"
+                />
+            </Button>
         </div>
         <div className="flex-cnt">
             <div className="flex-cnt item shrink mx-3">

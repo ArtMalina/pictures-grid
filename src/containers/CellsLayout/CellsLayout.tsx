@@ -20,7 +20,8 @@ export enum CellEventTypes {
     UpdateByContract = 3,
     DisplayOwnCells = 4,
     DisplayOtherCells = 5,
-    DisplayAll = 6
+    DisplayAll = 6,
+    UserUpdateTileGroup = 7
 }
 
 export interface ICellsLayoutProps extends IEventProps<ICellEventData[]> {
@@ -41,7 +42,7 @@ const MAP_CURR_CELL_EV_TO_CELL_GRID_EV = (t: ICellEventData, _i: number, _arr: I
 const Component = (props: ICellsLayoutProps) => {
 
     // TODO: MODE from props
-    const mode$ = useMemo(() => new BehaviorSubject<MyModes>(MyModes.Buy), []);
+    const modeRef = useRef<MyModes>(MyModes.Buy);
 
     // TODO: currentAcc from props
     const currentAcc$ = useMemo(() => new BehaviorSubject<AccountAddr>('<test-account>' as AccountAddr), []);
@@ -119,6 +120,7 @@ const Component = (props: ICellsLayoutProps) => {
             const cellEventsRef = event$.getValue();
 
             const updatesRef = cellTileUpdatesRef.current;
+            // TODO: too complex
             const cellEventOfIndex = cellEventsRef.reduce((acc, t, i) => ({ ...acc, [t.curr.cellNumber]: i }), {} as { [id: number]: number });
             const contractTilesData: { [id: number]: [number, ITileState]; } = {};
             let isUpdateNeeds = false;
@@ -147,17 +149,31 @@ const Component = (props: ICellsLayoutProps) => {
             //     // const tile = val.tileCells
             // });
 
+            let highlights: ICellsGridEvent[] = [];
+
+            if (modeRef.current === MyModes.Edit) {
+                highlights = val.tileCells
+                    .filter(t => t.tile.owner === dataService.getAccount())
+                    .map<ICellsGridEvent>(t => ({
+                        cellNumber: t.cellNumber,
+                        mouseType: MyCanvasMouseEvents.None,
+                        point: t.point
+                    }));
+
+                filteredCellsRef.current = [...highlights];
+            }
+
             cellsGridEvent$.next({
                 displayCells: [],
                 clearCells: [],
                 displayTiles: [...val.tileCells],
                 clearTiles: [],
-                highlightCells: [],
+                highlightCells: [...highlights],
                 shadeCells: []
             });
         });
         return () => sub.unsubscribe();
-    }, [dataService, cellsGridEvent$, event$, cellsUpdate$, contractTiles$, cellTileUpdatesRef]);
+    }, [dataService, cellsGridEvent$, event$, filteredCellsRef, cellsUpdate$, contractTiles$, cellTileUpdatesRef, modeRef]);
 
     useEffect(() => {
         const sub = cellsUpdate$.subscribe(([evType, payload]) => {
@@ -166,15 +182,24 @@ const Component = (props: ICellsLayoutProps) => {
             const cellEvents = event$.getValue();
             if (evType === CellEventTypes.DisplayAll || evType === CellEventTypes.DisplayOwnCells) {
                 const unhighlightCells = evType === CellEventTypes.DisplayAll ? [...filteredCellsRef.current] : [];
-                mode$.next(evType === CellEventTypes.DisplayAll ? MyModes.Buy : MyModes.Edit);
+                modeRef.current = evType === CellEventTypes.DisplayAll ? MyModes.Buy : MyModes.Edit;
                 filteredCellsRef.current = payload.map(t => ({
                     cellNumber: t.curr.cellNumber,
                     point: t.curr.point,
-                    mouseType: t.mouseType
+                    mouseType: MyCanvasMouseEvents.None
                 }));
+                const notHighlightedSelected = cellEvents
+                    .filter(t => t.mouseType === MyCanvasMouseEvents.Click
+                        && unhighlightCells.findIndex(x => x.cellNumber === t.curr.cellNumber) < 0)
+                    .map<ICellsGridEvent>(t => ({
+                        cellNumber: t.curr.cellNumber,
+                        point: t.curr.point,
+                        mouseType: t.mouseType
+                    }));
+                event$.next(cellEvents.filter(t => t.mouseType !== MyCanvasMouseEvents.Click));
                 // 1. display border of selected!
                 return cellsGridEvent$.next({
-                    displayCells: [], clearCells: [...unhighlightCells],
+                    displayCells: [], clearCells: [...unhighlightCells, ...notHighlightedSelected],
                     displayTiles: [], clearTiles: [],
                     highlightCells: [...filteredCellsRef.current],
                     shadeCells: []
@@ -202,7 +227,7 @@ const Component = (props: ICellsLayoutProps) => {
             });
         });
         return () => sub.unsubscribe();
-    }, [cellsUpdate$, event$, cellsGridEvent$, mode$, filteredCellsRef]);
+    }, [cellsUpdate$, event$, cellsGridEvent$, modeRef, filteredCellsRef]);
 
     useEffect(
         () => {
@@ -263,37 +288,68 @@ const Component = (props: ICellsLayoutProps) => {
                 // 6*        move Out (clear last --- ok)
                 //  remove from EVENT:  [ click twice on the same ]
 
-                const result: { display: ICellsGridEvent[], clear: ICellsGridEvent[], finalCellEvents: ICellEventData[] } = {
-                    display: !cellEvents.length ? [{ ...newCellData, mouseType: evType }] : [],
-                    clear: [],
-                    finalCellEvents: !cellEvents.length ? [{ mouseType: evType, lastCell: { cellNumber: -1, point: [0, 0] }, curr: { ...newCellData } }] : []
-                };
+                const MODE = modeRef.current;
+                const CURRENT_ADDR = currentAcc$.getValue();
+                const contractTiles = contractTiles$.getValue();
 
                 let CLICK_TO_NEW_CELL = evType === MyCanvasMouseEvents.Click;
                 let ADD_NEW_MOVE_CELL = cellEvents.length && evType === MyCanvasMouseEvents.Move;
 
-                const MODE = mode$.getValue();
-                const CURRENT_ADDR = currentAcc$.getValue();
-                const contractTiles = contractTiles$.getValue();
+                const EDIT_NOT_MINE_TILE_OE_EMPTY = MODE === MyModes.Edit && CLICK_TO_NEW_CELL &&
+                    (!contractTiles[newCellData.cellNumber] || contractTiles[newCellData.cellNumber][1].tile.owner !== CURRENT_ADDR);
+
+                if (EDIT_NOT_MINE_TILE_OE_EMPTY) CLICK_TO_NEW_CELL = false;
+                const result: { display: ICellsGridEvent[], clear: ICellsGridEvent[], finalCellEvents: ICellEventData[] } = {
+                    display: !cellEvents.length && !EDIT_NOT_MINE_TILE_OE_EMPTY ? [{ ...newCellData, mouseType: evType }] : [],
+                    clear: [],
+                    finalCellEvents: !cellEvents.length && !EDIT_NOT_MINE_TILE_OE_EMPTY ? [{ mouseType: evType, lastCell: { cellNumber: -1, point: [0, 0] }, curr: { ...newCellData } }] : []
+                };
+
+                if (EDIT_NOT_MINE_TILE_OE_EMPTY) {
+                    // result.finalCellEvents = result.finalCellEvents.filter(t =>
+                    //     filteredCellsRef.current.findIndex(x => x.cellNumber === t.curr.cellNumber && t.mouseType === MyCanvasMouseEvents.Click) < 0
+                    // );
+                    console.log('... final cells, filetred ', [...result.finalCellEvents], [...filteredCellsRef.current]);
+                    console.log('... events ', [...cellEvents]);
+                    // filteredCellsRef.current = [];
+                }
 
                 cellEvents.forEach(t => {
 
                     if (evType === MyCanvasMouseEvents.Click) {
+                        // console.log('%c cell event', 'background-color: darkcyan; color: white', t);
                         // if MODE is EDIT and cell is not mine - skip!
                         // if MODE is BUY and cell is mine - skip!
                         // all above - if CURRENT_ADDR is not EMPTY
-                        console.log('%c ev ', 'color: green', t.curr, contractTiles[t.curr.cellNumber], MODE, CURRENT_ADDR);
-                        if (MODE === MyModes.Edit && (!contractTiles[t.curr.cellNumber] || contractTiles[t.curr.cellNumber][1].tile.owner !== CURRENT_ADDR)) {
+                        // console.log('%c ev ', 'color: green', t, contractTiles[t.curr.cellNumber], CURRENT_ADDR);
+
+                        // click to new cell that is not mine or empty in EDIT MODE
+                        if (MODE === MyModes.Edit && t.mouseType === MyCanvasMouseEvents.Click && (!contractTiles[t.curr.cellNumber] || contractTiles[t.curr.cellNumber][1].tile.owner !== CURRENT_ADDR)) {
                             CLICK_TO_NEW_CELL = false;
                             return;
                         }
+                        // click on another cell: display selected owned tiles!
+                        if (MODE === MyModes.Edit && t.mouseType === MyCanvasMouseEvents.Click && !EDIT_NOT_MINE_TILE_OE_EMPTY) {
+                            if (t.curr.cellNumber !== newCellData.cellNumber) {
+                                result.display.push({ ...t.curr, mouseType: t.mouseType });
+                            }
+                        }
                         // TODO: click for BUYING on empty cell - is OK (yet)
-                        console.log('t.contractTile is buy', t.curr.cellNumber);
-                        console.log('t.contractTile is CURRENT_ADDR', CURRENT_ADDR, contractTiles[t.curr.cellNumber]);
-                        console.log('t.contractTile is owner', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner);
-                        console.log('t.contractTile is owner == myAddr', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR);
-                        if (MODE === MyModes.Buy && contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR) {
+                        // console.log('t.contractTile is buy', t.curr.cellNumber);
+                        // console.log('t.contractTile is CURRENT_ADDR', CURRENT_ADDR, contractTiles[t.curr.cellNumber]);
+                        // console.log('t.contractTile is owner', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner);
+                        // console.log('t.contractTile is owner == myAddr', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR);
+                        if (MODE === MyModes.Buy && t.mouseType === MyCanvasMouseEvents.Click && contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR) {
                             return;
+                        }
+
+                        if (MODE === MyModes.Buy) {
+                            // click on new [ NON-EDIT mode ] 
+                            // - ignore selected (only one selected is allowed)
+                            if (t.curr.cellNumber !== newCellData.cellNumber) {
+                                result.clear.push({ ...t.curr, mouseType: evType });
+                                return;
+                            }
                         }
 
                         if (t.curr.cellNumber === newCellData.cellNumber && t.mouseType === evType) {
@@ -350,6 +406,14 @@ const Component = (props: ICellsLayoutProps) => {
                     result.finalCellEvents.push({ mouseType: evType, lastCell: { cellNumber: -1, point: [0, 0] }, curr: { ...newCellData } });
                     result.display.push({ ...newCellData, mouseType: evType });
                 }
+                if (evType === MyCanvasMouseEvents.Click) {
+                    if (EDIT_NOT_MINE_TILE_OE_EMPTY) {
+                        result.finalCellEvents = result.finalCellEvents.filter(
+                            t => t.mouseType !== MyCanvasMouseEvents.Click
+                        );
+                    }
+                    console.log('final res', CLICK_TO_NEW_CELL, { ...result });
+                }
                 if (result.display.length || result.clear.length) {
                     cellsGridEvent$.next({
                         displayCells: [...result.display],
@@ -360,7 +424,9 @@ const Component = (props: ICellsLayoutProps) => {
                         shadeCells: []
                     });
                 }
-                // console.log('\nresult', { ...result });
+                if (evType === MyCanvasMouseEvents.Click) {
+                    console.log('\nresult', { ...result });
+                }
                 event$.next([...result.finalCellEvents]);
             });
 
@@ -372,7 +438,7 @@ const Component = (props: ICellsLayoutProps) => {
             cellsLayoutSizeRef,
             rowsDataRef,
             event$,
-            mode$,
+            modeRef,
             contractTiles$,
             currentAcc$,
             cellsGridEvent$,
