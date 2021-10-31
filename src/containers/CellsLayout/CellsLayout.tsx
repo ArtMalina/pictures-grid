@@ -305,14 +305,6 @@ const Component = (props: ICellsLayoutProps) => {
                     finalCellEvents: !cellEvents.length && !EDIT_NOT_MINE_TILE_OE_EMPTY ? [{ mouseType: evType, lastCell: { cellNumber: -1, point: [0, 0] }, curr: { ...newCellData } }] : []
                 };
 
-                if (EDIT_NOT_MINE_TILE_OE_EMPTY) {
-                    // result.finalCellEvents = result.finalCellEvents.filter(t =>
-                    //     filteredCellsRef.current.findIndex(x => x.cellNumber === t.curr.cellNumber && t.mouseType === MyCanvasMouseEvents.Click) < 0
-                    // );
-                    console.log('... final cells, filetred ', [...result.finalCellEvents], [...filteredCellsRef.current]);
-                    console.log('... events ', [...cellEvents]);
-                    // filteredCellsRef.current = [];
-                }
 
                 cellEvents.forEach(t => {
 
