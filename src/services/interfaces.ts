@@ -1,5 +1,5 @@
 ﻿import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { ITileState } from "../interfaces/cells";
+import { ITileState, IUnmintedTileState } from "../interfaces/cells";
 
 export type AccountAddr = string & { _TYPE_: "AccountAddr" };
 export type ContractTokenID = number & { _TYPE_: "ContractTokenID" };
@@ -36,4 +36,5 @@ export interface IDataService {
     fetchTokenInfo(id: ContractTokenID): Promise<ContractTokenInfo>;
     fetchTiles(): Promise<ContractTileInfo[]>;
     groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]>;
+    mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]>;
 }

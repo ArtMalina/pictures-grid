@@ -1,6 +1,6 @@
-﻿import React, { PropsWithChildren } from 'react';
+import React, { PropsWithChildren, useEffect, useState } from 'react';
 import { Subject } from 'rxjs/internal/Subject';
-import { CartEvents, ICartEventData } from '../interfaces/cells';
+import { CartEvents, TilesEventCart } from '../interfaces/cells';
 import Button from './Button';
 
 
@@ -8,23 +8,43 @@ export interface IModalProps {
     title: string;
     width: number;
     height: number;
-    event$: Subject<ICartEventData>;
+    event$: Subject<TilesEventCart>;
+    open: boolean;
 }
 
 const Modal = (props: PropsWithChildren<IModalProps>) => {
-    const { title, width, height, event$ } = props;
+    const { title, width, height, event$, open } = props;
+    const [state, setState] = useState<TilesEventCart>({ type: CartEvents.Close, payload: [], groupUrl: '' });
+    useEffect(() => {
+        console.log('useEffect in modal....');
+        const sub = event$.subscribe(ev => {
+            console.log('ev in modal: ', ev);
+            if ([CartEvents.Modify, CartEvents.Open].includes(ev.type)) setState(ev);
+        });
+        return () => sub.unsubscribe();
+    }, [event$]);
+
+    console.log('Modal state', state);
+
+    if (!open) return null;
+
+    const ifNewCell = !!state.payload.filter(t => !t.token && !t.tile).length;
+    let BTN_TITLE = state && state.type === CartEvents.Modify ? "Save" : "Buy";
+    BTN_TITLE = state && state.type === CartEvents.Open ? "Buy" : BTN_TITLE;
+    BTN_TITLE = ifNewCell ? 'Mint' : BTN_TITLE;
+
     return (
         <div id="modal-overlay-cnt">
-            <div id="modal-cnt" style={ { width, height, marginTop: -0.5 * height - 25, marginLeft: -0.5 * width } }>
+            <div id="modal-cnt" style={ { width, height, marginTop: -0.8 * height, marginLeft: -0.5 * width } }>
                 <div className="header">
-                    <h2>{ title }</h2>
+                    <Button light color="header" noActive title={ title } />
                     <div className="flex-cnt">
                         <Button
                             event$={ event$ }
                             action={ { type: CartEvents.Save, payload: [] } }
                             light
                             color="active"
-                            title="Save" />
+                            title={ BTN_TITLE } />
                         <div className="flex-cnt item mx-1"></div>
                         <Button
                             event$={ event$ }

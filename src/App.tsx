@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import './App.scss';
 
 import Header from './containers/Header';
@@ -7,12 +7,12 @@ import CellsLayout from './containers/CellsLayout';
 
 import { appConfig } from './AppConfig';
 
-import { CartEvents, ICartEventData, ICellEventData, MyCanvasMouseEvents } from './interfaces/cells';
+import { CartEvents, ICartEventData, ICellData, ICellEventData, IUnmintedTileState, ITileState, MyCanvasMouseEvents, TilesEventCart } from './interfaces/cells';
 
 import { BehaviorSubject } from 'rxjs/internal/BehaviorSubject';
 import CartModal from './containers/Cart/CartModal';
 import { Subject } from 'rxjs/internal/Subject';
-import { CellEventTypes } from './containers/CellsLayout/CellsLayout';
+import { CellEventTypes, CellsEvent } from './containers/CellsLayout/CellsLayout';
 
 import ServiceContext from './contexts/ServiceContext';
 import TestDataService from './services/TestDataService';
@@ -25,9 +25,11 @@ const App = () => {
     const dataService = useMemo(() => new TestDataService(), []);
 
     const cellEvent$ = useMemo(() => new BehaviorSubject<ICellEventData[]>([]), []);
+    const selectedCells$ = useMemo(() => new BehaviorSubject<ICellData[]>([]), []);
+    const selectedCellsRef = useRef<ICellData[]>([]);
     const cartEvent$ = useMemo(() => new Subject<ICartEventData>(), []);
-    const cartState$ = useMemo(() => new Subject<ICartEventData>(), []);
-    const cellsUpdate$ = useMemo(() => new Subject<[CellEventTypes, ICellEventData[]]>(), []);
+    const cartState$ = useMemo(() => new Subject<TilesEventCart>(), []);
+    const cellsUpdate$ = useMemo(() => new Subject<CellsEvent>(), []);
 
     useEffect(() => {
         // 1.   load tiles  [ for every tile we have to load its Token ]
@@ -45,19 +47,33 @@ const App = () => {
 
     useEffect(() => {
         const sub = cellEvent$.subscribe((evArr) => {
-            evArr.forEach(({ curr }) => {
-                // console.log('%c cellNumber ', 'border: 1px solid green', curr.cellNumber + 1);
+            const selected = evArr.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map(t => t.curr);
+            const newCells: ICellData[] = [];
+            let evCells = [...selected];
+            const selectedState = [...selectedCellsRef.current];
+            selectedState.forEach(t => {
+                // store items of current stated cells if there are not in EV_CELLS
+                if (!evCells.find(x => x.cellNumber === t.cellNumber)) newCells.push(t);
+                // update EV_CELLS: only cells that are not stored (new)
+                evCells = evCells.filter(x => x.cellNumber !== t.cellNumber);
             });
+            if (evCells.length || newCells.length) {
+                selectedCellsRef.current = [...selected];
+                selectedCells$.next([...selected]);
+            }
         });
         return () => sub.unsubscribe();
-    }, [cellEvent$]);
+    }, [cellEvent$, selectedCells$, selectedCellsRef]);
     useEffect(() => {
         const sub = cartEvent$.subscribe((ev) => {
             console.log('%c cartEvent ', 'border: 1px solid green', ev, dataService.getState());
+
+            const DATA_SERVICE_STATE = dataService.getState().getValue();
+
             if (ev.type === CartEvents.Modify) {
                 cartState$.next({
                     type: CartEvents.Modify,
-                    payload: dataService.getState().getValue().tileCells.filter(t => {
+                    payload: DATA_SERVICE_STATE.tileCells.filter(t => {
                         return cellEvent$.getValue().find(x =>
                             x.mouseType === MyCanvasMouseEvents.Click
                             && t.cellNumber === x.curr.cellNumber);
@@ -66,7 +82,21 @@ const App = () => {
                 });
             }
             if (ev.type === CartEvents.Open) {
-                cartState$.next({ type: CartEvents.Open, payload: cellEvent$.getValue().filter(t => t.mouseType === MyCanvasMouseEvents.Click) });
+                cartState$.next({
+                    type: CartEvents.Open,
+                    payload: cellEvent$.getValue()
+                        .filter(t => t.mouseType === MyCanvasMouseEvents.Click)
+                        .map<IUnmintedTileState>(t => {
+                            const tile = DATA_SERVICE_STATE.tileCells.find(x => x.cellNumber === t.curr.cellNumber);
+                            return {
+                                cellNumber: t.curr.cellNumber,
+                                point: t.curr.point,
+                                tile: tile && tile.tile,
+                                token: tile && tile.token
+                            }
+                        }),
+                    groupUrl: ''
+                });
             }
             if (ev.type === CartEvents.ShowOther) {
                 return cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
@@ -88,26 +118,37 @@ const App = () => {
             }
         });
         return () => sub.unsubscribe();
-    }, [cartEvent$, cartState$, cellEvent$, cellsUpdate$]);
+    }, [dataService, cartEvent$, cartState$, cellEvent$, cellsUpdate$]);
     useEffect(() => {
         const sub = cartState$.subscribe((ev) => {
             console.log('%c cartState ', 'border: 1px solid blue', ev);
+
+            // const DATA_SERVICE_STATE = dataService.getState().getValue();
+
             if (ev.type === CartEvents.SaveTiles) {
-                dataService.groupTiles(ev.payload, ev.groupUrl);
+                const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
+
+                if (tiles.length) dataService.groupTiles([...tiles] as ITileState[], ev.groupUrl);
+                else {
+                    cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
+                    dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);
+                }
             }
             if (ev.type === CartEvents.RemoveItems) {
-                cellsUpdate$.next([CellEventTypes.Remove, [...ev.payload]]);
+                const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
+                cellsUpdate$.next([CellEventTypes.Remove, [...tiles] as ITileState[]]);
             }
             if (ev.type === CartEvents.Save) {
-                cellsUpdate$.next([CellEventTypes.UserUpdateTileGroup, [...ev.payload]]);
+                const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
+                cellsUpdate$.next([CellEventTypes.UserUpdateTileGroup, [...tiles] as ITileState[]]);
             }
         });
         return () => sub.unsubscribe();
-    }, [cellsUpdate$, cartState$, cellEvent$]);
+    }, [dataService, cellsUpdate$, cartState$, cellEvent$]);
     return (
         <div id="app-container">
             <ServiceContext.Provider value={ dataService }>
-                <Header event$={ cartEvent$ } />
+                <Header event$={ cartEvent$ } selectedCells$={ selectedCells$ } />
                 <CellsLayout
                     cellSize={ cellSize }
                     cellsAmount={ appConfig.cellsAmount }

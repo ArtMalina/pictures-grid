@@ -1,5 +1,5 @@
 ﻿import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { ITileState } from "../interfaces/cells";
+import { ITileState, IUnmintedTileState } from "../interfaces/cells";
 import {
     AccountAddr,
     ContractTileID,
@@ -297,6 +297,43 @@ export default class DataService implements IDataService {
                 }
             ];
         }, []);
+        await this.fetchTiles();
+        return [true, ''];
+    }
+
+    async mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]> {
+
+        console.log('mintTiles', tiles);
+
+        console.log('%c mint tiles ', 'background-color: orange; color: green', tiles);
+
+        const CURR_ADDR = this.getAccount();
+
+        if (!CURR_ADDR) {
+            return [false, 'no current account address'];
+        }
+
+        if (!tiles.length) {
+            return [false, 'no tiles for minting'];
+        }
+
+        tiles.forEach(t => {
+            TEST_TILES.push({
+                id: (t.cellNumber) as ContractTileID,
+                owner: CURR_ADDR,
+                tokenId: (t.cellNumber) as ContractTokenID,
+                title: new Date().toLocaleString(),
+                url: groupUrl,
+                boundedTiles: []
+            });
+
+            TOKENS.push({
+                id: (t.cellNumber) as ContractTokenID,
+                owner: CURR_ADDR,
+                price: t.token ? t.token.price : '2.5',
+                url: groupUrl,
+            });
+        });
         await this.fetchTiles();
         return [true, ''];
     }

@@ -1,4 +1,4 @@
-﻿import { ContractTileInfo, ContractTokenInfo } from "../services/interfaces";
+import { ContractTileInfo, ContractTokenInfo } from "../services/interfaces";
 
 export type TileCoords = [number, number];
 
@@ -28,22 +28,21 @@ export type ICellEventData = {
 };
 
 export enum CartEvents {
-    None = 0,
-    Open = 1,
-    Close = 2,
-    Save = 3,
-    RemoveItems = 4,
-    Modify = 5,
-    ShowOwn = 6,
-    ShowOther = 7,
-    SaveTiles = 8
+    None = 'None',
+    Open = 'Open',
+    Close = 'Close',
+    Save = 'Save',
+    RemoveItems = 'RemoveItems',
+    Modify = 'Modify',
+    ShowOwn = 'ShowOwn',
+    ShowOther = 'ShowOther',
+    SaveTiles = 'SaveTiles',
 }
 
-type CartEventsOfCell = CartEvents.Close
+type CartEventsOfCell =
+    | CartEvents.Close
     | CartEvents.None
     | CartEvents.Open
-    | CartEvents.RemoveItems
-    | CartEvents.Save
     | CartEvents.ShowOther
     | CartEvents.ShowOwn;
 
@@ -53,16 +52,26 @@ type CellsEventCart = {
     status?: any;
 };
 
-type TilesEvenCart = {
-    payload: ITileState[];
-    type: CartEvents.Modify | CartEvents.SaveTiles;
+type TileData = {
+    tile: ContractTileInfo;
+    token: ContractTokenInfo;
+}
+
+export type ITileState = ICellData & TileData;
+
+export type IUnmintedTileState = ICellData & Partial<TileData>;
+
+export type TilesEventCart = {
+    payload: IUnmintedTileState[];
+    type: | CartEvents.Close
+    | CartEvents.None
+    | CartEvents.Save
+    | CartEvents.Open
+    | CartEvents.Modify
+    | CartEvents.SaveTiles
+    | CartEvents.RemoveItems;
     status?: any;
     groupUrl: string;
 };
 
-export type ICartEventData = CellsEventCart | TilesEvenCart;
-
-export interface ITileState extends ICellData {
-    tile: ContractTileInfo;
-    token: ContractTokenInfo;
-}
+export type ICartEventData = CellsEventCart | TilesEventCart;

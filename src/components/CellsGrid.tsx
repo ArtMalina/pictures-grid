@@ -161,13 +161,13 @@ const drawTileCell = (ctx2d: CanvasRenderingContext2D, tileCell: ITileState, _ca
             drawBoundedTilesImage(ctx2d, img, tileCell.tile.boundedTiles.map(t => getPointByCellNumber(t)), [w, h], borderWidth);
             return;
         }
-
+        console.log('draw tile cell', tileCell);
         // const natW = img.naturalWidth;
         // const natH = img.naturalHeight;
         // ctx.drawImage(img, 0, 0, natW, natH, x, y, w, h);
         ctx2d.beginPath();
         ctx2d.rect(x, y, w, h);
-        ctx2d.fillStyle = 'white';
+        ctx2d.fillStyle = '#37474f';
         ctx2d.fill();
         ctx2d.drawImage(img, x, y, w, h);
     };

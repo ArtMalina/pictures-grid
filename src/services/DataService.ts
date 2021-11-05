@@ -1,5 +1,5 @@
 ﻿import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
-import { ITileState } from "../interfaces/cells";
+import { ITileState, IUnmintedTileState } from "../interfaces/cells";
 import {
     AccountAddr,
     ContractTileID,
@@ -11,6 +11,9 @@ import {
 } from "./interfaces";
 
 export default class DataService implements IDataService {
+    mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]> {
+        throw new Error("Method not implemented.");
+    }
     groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]> {
         throw new Error("Method not implemented.");
     }

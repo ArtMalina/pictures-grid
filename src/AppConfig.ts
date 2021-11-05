@@ -1,4 +1,4 @@
-﻿export interface IAppConfig {
+export interface IAppConfig {
     cellsAmount: number;
     inRowCells: number;
     cellWidth: number;

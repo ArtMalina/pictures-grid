@@ -24,8 +24,27 @@ export enum CellEventTypes {
     UserUpdateTileGroup = 7
 }
 
+export type NoneEvent = [CellEventTypes.None, ICellEventData[]];
+export type AddTileEvent = [CellEventTypes.Add, ICellEventData[]];
+export type RemoveTileInModifyModeEvent = [CellEventTypes.Remove, ITileState[]];
+export type UpdateByContractEvent = [CellEventTypes.UpdateByContract, ICellEventData[]];
+export type DisplayCellsEvent = [CellEventTypes.DisplayOwnCells, ICellEventData[]];
+export type DisplayOtherEvent = [CellEventTypes.DisplayOtherCells, ICellEventData[]];
+export type DisplayAllEvent = [CellEventTypes.DisplayAll, ICellEventData[]];
+export type UserTilesSaveEvent = [CellEventTypes.UserUpdateTileGroup, ITileState[]];
+
+export type CellsEvent =
+    | NoneEvent
+    | AddTileEvent
+    | RemoveTileInModifyModeEvent
+    | UpdateByContractEvent
+    | DisplayCellsEvent
+    | DisplayOtherEvent
+    | DisplayAllEvent
+    | UserTilesSaveEvent;
+
 export interface ICellsLayoutProps extends IEventProps<ICellEventData[]> {
-    cellsUpdate$: Subject<[CellEventTypes, ICellEventData[]]>;
+    cellsUpdate$: Subject<CellsEvent>;
     cellsAmount: number;
     cellSize: [number, number];
     cellBorderWidth: number;
@@ -153,7 +172,7 @@ const Component = (props: ICellsLayoutProps) => {
 
             if (modeRef.current === MyModes.Edit) {
                 highlights = val.tileCells
-                    .filter(t => t.tile.owner === dataService.getAccount())
+                    .filter(t => t.tile && t.tile.owner === dataService.getAccount())
                     .map<ICellsGridEvent>(t => ({
                         cellNumber: t.cellNumber,
                         mouseType: MyCanvasMouseEvents.None,
@@ -176,14 +195,15 @@ const Component = (props: ICellsLayoutProps) => {
     }, [dataService, cellsGridEvent$, event$, filteredCellsRef, cellsUpdate$, contractTiles$, cellTileUpdatesRef, modeRef]);
 
     useEffect(() => {
-        const sub = cellsUpdate$.subscribe(([evType, payload]) => {
+        const sub = cellsUpdate$.subscribe((ev) => {
+            const evType = ev[0], payload = ev[1];
             console.log('cellsUpdate$', evType, payload);
 
             const cellEvents = event$.getValue();
             if (evType === CellEventTypes.DisplayAll || evType === CellEventTypes.DisplayOwnCells) {
                 const unhighlightCells = evType === CellEventTypes.DisplayAll ? [...filteredCellsRef.current] : [];
                 modeRef.current = evType === CellEventTypes.DisplayAll ? MyModes.Buy : MyModes.Edit;
-                filteredCellsRef.current = payload.map(t => ({
+                filteredCellsRef.current = (ev[1] as ICellEventData[]).map<ICellsGridEvent>(t => ({
                     cellNumber: t.curr.cellNumber,
                     point: t.curr.point,
                     mouseType: MyCanvasMouseEvents.None
@@ -211,20 +231,40 @@ const Component = (props: ICellsLayoutProps) => {
                 return;
             }
 
-            const afterRemoveCellEvents = cellEvents
-                .filter(t => t.mouseType !== MyCanvasMouseEvents.Click || payload.findIndex(x => x.curr.cellNumber === t.curr.cellNumber) < 0);
+            if (evType === CellEventTypes.Remove) {
+
+                const afterRemoveCellEvents = cellEvents
+                    .filter(t => t.mouseType !== MyCanvasMouseEvents.Click || ev[1].findIndex(x => x.cellNumber === t.curr.cellNumber) < 0);
 
 
-            event$.next([...afterRemoveCellEvents]);
+                event$.next([...afterRemoveCellEvents]);
 
-            cellsGridEvent$.next({
-                displayCells: afterRemoveCellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                clearCells: payload.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
-                displayTiles: [],
-                clearTiles: [],
-                highlightCells: [],
-                shadeCells: []
-            });
+                cellsGridEvent$.next({
+                    displayCells: afterRemoveCellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+                    clearCells: ev[1].map<ICellsGridEvent>(t => ({ cellNumber: t.cellNumber, point: t.point, mouseType: MyCanvasMouseEvents.Click })),
+                    displayTiles: [],
+                    clearTiles: [],
+                    highlightCells: [],
+                    shadeCells: []
+                });
+
+                return;
+            }
+
+            // const afterRemoveCellEvents = cellEvents
+            //     .filter(t => t.mouseType !== MyCanvasMouseEvents.Click || payload.findIndex(x => x.curr.cellNumber === t.curr.cellNumber) < 0);
+
+
+            // event$.next([...afterRemoveCellEvents]);
+
+            // cellsGridEvent$.next({
+            //     displayCells: afterRemoveCellEvents.filter(t => t.mouseType === MyCanvasMouseEvents.Click).map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+            //     clearCells: payload.map<ICellsGridEvent>(MAP_CURR_CELL_EV_TO_CELL_GRID_EV),
+            //     displayTiles: [],
+            //     clearTiles: [],
+            //     highlightCells: [],
+            //     shadeCells: []
+            // });
         });
         return () => sub.unsubscribe();
     }, [cellsUpdate$, event$, cellsGridEvent$, modeRef, filteredCellsRef]);
@@ -443,7 +483,7 @@ const Component = (props: ICellsLayoutProps) => {
     );
 
     return (
-        <div id="cells-body" ref={ onBoxRef }>
+        <div id="cells-body" className="overflow" ref={ onBoxRef }>
             <CanvasComponent
                 width={ sizeWithOuter[0] }
                 height={ sizeWithOuter[1] }

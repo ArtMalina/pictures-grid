@@ -14,7 +14,7 @@ export interface IInputProps<T = any> {
 }
 
 const Input = (props: PropsWithChildren<IInputProps>) => {
-    const { title, value, event$, noActive, light, small, color, action } = props;
+    const { value, event$, noActive, light, small, color, action } = props;
     const [state, setState] = useState(value || '');
     const onChangeHandler = useCallback<React.ChangeEventHandler<HTMLInputElement>>((event) => {
         setState(event.currentTarget.value);
@@ -24,7 +24,7 @@ const Input = (props: PropsWithChildren<IInputProps>) => {
     const modifiersTxt = [noActive && 'no-action', light && 'light', small && 'small', color].filter(Boolean).map(t => `text-input--${t}`);
     return (
         <div className={ ['text-input', ...modifiersTxt].join(' ') }>
-            <input type="text" value={ state } onChange={ onChangeHandler } />
+            <input type="text" value={ state } onChange={ onChangeHandler } disabled={ noActive } />
         </div>
     );
 };
