@@ -37,7 +37,7 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
 
     return (
         <div id="modal-overlay-cnt">
-            <div id="modal-cnt" style={ { width, height, marginTop: -0.8 * height, marginLeft: -0.5 * width } }>
+            <div id="modal-cnt" style={ { width, height, top: '25%', marginLeft: -0.5 * width } }>
                 <div className="header">
                     <Button light color="header" noActive title={ title } />
                     <div className="flex-cnt">
