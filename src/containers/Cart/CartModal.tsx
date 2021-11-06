@@ -55,8 +55,16 @@ const CartModal = (props: ICartModalProps) => {
         });
         const sub = cartEvent$.subscribe((val) => {
             console.log('cart event', val, [...tilesRef.current]);
-            if (val.type === CartEvents.Close || val.type === CartEvents.Save) {
-                if (val.type === CartEvents.Save) {
+            if ([CartEvents.Close, CartEvents.Save, CartEvents.Buy].includes(val.type)) {
+                if (val.type === CartEvents.Buy) {
+                    if (tilesRef.current.length) {
+                        event$.next({
+                            type: CartEvents.Buy,
+                            payload: tilesRef.current.map(t => ({ ...t })),
+                            groupUrl: input$.getValue()[0]
+                        });
+                    }
+                } else if (val.type === CartEvents.Save) {
                     if (tilesRef.current.length) {
                         event$.next({
                             type: CartEvents.SaveTiles,

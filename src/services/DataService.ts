@@ -11,6 +11,9 @@ import {
 } from "./interfaces";
 
 export default class DataService implements IDataService {
+    buyTiles(tiles: ITileState[], url: string): Promise<[boolean, string]> {
+        throw new Error("Method not implemented.");
+    }
     mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]> {
         throw new Error("Method not implemented.");
     }

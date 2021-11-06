@@ -1,6 +1,11 @@
 ﻿import { appConfig } from '../AppConfig';
 import { TileCoords } from '../interfaces/cells';
 
+/**
+ * 
+ * @param cellNumber starts from ZERO
+ * @returns 
+ */
 export function getPointByCellNumber(cellNumber: number): [number, number] {
     const y = Math.floor(cellNumber / appConfig.inRowCells);
     const x = cellNumber - appConfig.inRowCells * y;

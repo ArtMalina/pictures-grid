@@ -45,6 +45,7 @@ export type CellsEvent =
 
 export interface ICellsLayoutProps extends IEventProps<ICellEventData[]> {
     cellsUpdate$: Subject<CellsEvent>;
+    currentAcc$: BehaviorSubject<AccountAddr>;
     cellsAmount: number;
     cellSize: [number, number];
     cellBorderWidth: number;
@@ -60,14 +61,14 @@ const MAP_CURR_CELL_EV_TO_CELL_GRID_EV = (t: ICellEventData, _i: number, _arr: I
 
 const Component = (props: ICellsLayoutProps) => {
 
+    const { cellSize, cellsAmount, cellBorderWidth, maxCanvasWidth, event$, cellsUpdate$, currentAcc$ } = props;
+
     // TODO: MODE from props
     const modeRef = useRef<MyModes>(MyModes.Buy);
 
-    // TODO: currentAcc from props
-    const currentAcc$ = useMemo(() => new BehaviorSubject<AccountAddr>('<test-account>' as AccountAddr), []);
+    // // TODO: currentAcc from props
+    // const currentAcc$ = useMemo(() => new BehaviorSubject<AccountAddr>('<test-account>' as AccountAddr), []);
 
-
-    const { cellSize, cellsAmount, cellBorderWidth, maxCanvasWidth, event$, cellsUpdate$ } = props;
 
     const dataService = useContext(ServiceContext) as IDataService;
 

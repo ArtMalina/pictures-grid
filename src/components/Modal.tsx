@@ -33,6 +33,8 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
     BTN_TITLE = state && state.type === CartEvents.Open ? "Buy" : BTN_TITLE;
     BTN_TITLE = ifNewCell ? 'Mint' : BTN_TITLE;
 
+    const EV_NAME = state && state.type === CartEvents.Open || ifNewCell ? CartEvents.Buy : CartEvents.Save;
+
     return (
         <div id="modal-overlay-cnt">
             <div id="modal-cnt" style={ { width, height, marginTop: -0.8 * height, marginLeft: -0.5 * width } }>
@@ -41,7 +43,7 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
                     <div className="flex-cnt">
                         <Button
                             event$={ event$ }
-                            action={ { type: CartEvents.Save, payload: [] } }
+                            action={ { type: EV_NAME, payload: [] } }
                             light
                             color="active"
                             title={ BTN_TITLE } />

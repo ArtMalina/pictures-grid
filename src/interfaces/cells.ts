@@ -32,6 +32,7 @@ export enum CartEvents {
     Open = 'Open',
     Close = 'Close',
     Save = 'Save',
+    Buy = 'Buy',
     RemoveItems = 'RemoveItems',
     Modify = 'Modify',
     ShowOwn = 'ShowOwn',
@@ -63,12 +64,14 @@ export type IUnmintedTileState = ICellData & Partial<TileData>;
 
 export type TilesEventCart = {
     payload: IUnmintedTileState[];
-    type: | CartEvents.Close
+    type:
+    | CartEvents.Close
     | CartEvents.None
     | CartEvents.Save
     | CartEvents.Open
     | CartEvents.Modify
     | CartEvents.SaveTiles
+    | CartEvents.Buy
     | CartEvents.RemoveItems;
     status?: any;
     groupUrl: string;

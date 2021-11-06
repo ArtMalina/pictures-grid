@@ -16,6 +16,7 @@ import { CellEventTypes, CellsEvent } from './containers/CellsLayout/CellsLayout
 
 import ServiceContext from './contexts/ServiceContext';
 import TestDataService from './services/TestDataService';
+import { AccountAddr, EMPTY_ADDR } from './services/interfaces';
 
 const App = () => {
 
@@ -23,6 +24,8 @@ const App = () => {
     console.log('%c render global app! ', 'border: 2px solid red; color: silver; background-color: darkblue;');
 
     const dataService = useMemo(() => new TestDataService(), []);
+
+    const currentAcc$ = useMemo(() => new BehaviorSubject<AccountAddr>(EMPTY_ADDR), []);
 
     const cellEvent$ = useMemo(() => new BehaviorSubject<ICellEventData[]>([]), []);
     const selectedCells$ = useMemo(() => new BehaviorSubject<ICellData[]>([]), []);
@@ -39,11 +42,13 @@ const App = () => {
         // 5.   new\updated tiles: send to eventBus (for displaying)
         dataService.connect()
             .then(isOk => {
+                const acc = dataService.getAccount();
+                acc && currentAcc$.next(acc);
                 dataService.fetchTiles().then(tiles => console.log('%c items loaded! ', 'color: green', [...tiles]));
 
             })
             .catch((err) => { });
-    }, [dataService]);
+    }, [dataService, currentAcc$]);
 
     useEffect(() => {
         const sub = cellEvent$.subscribe((evArr) => {
@@ -107,7 +112,7 @@ const App = () => {
                 cellsUpdate$.next([
                     CellEventTypes.DisplayOwnCells,
                     dataService.getState().getValue().tileCells
-                        .filter(tile => tile.token.owner === myAccount)
+                        .filter(tileData => tileData.tile.owner === myAccount)
                         .map<ICellEventData>(t => ({
                             mouseType: MyCanvasMouseEvents.None,
                             curr: { cellNumber: t.cellNumber, point: t.point },
@@ -129,6 +134,15 @@ const App = () => {
                 const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
 
                 if (tiles.length) dataService.groupTiles([...tiles] as ITileState[], ev.groupUrl);
+                // else {
+                //     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
+                //     dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);
+                // }
+            }
+            if (ev.type === CartEvents.Buy) {
+                const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
+
+                if (tiles.length) dataService.buyTiles([...tiles] as ITileState[], ev.groupUrl);
                 else {
                     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
                     dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);
@@ -151,6 +165,7 @@ const App = () => {
                 <Header event$={ cartEvent$ } selectedCells$={ selectedCells$ } />
                 <CellsLayout
                     cellSize={ cellSize }
+                    currentAcc$={ currentAcc$ }
                     cellsAmount={ appConfig.cellsAmount }
                     cellBorderWidth={ appConfig.cellBorderWidth }
                     maxCanvasWidth={ appConfig.maxCanvasWidth || 0 }

@@ -8,6 +8,7 @@ export type ContractTileID = number & { _TYPE_: "ContractTileID" };
 export const EMPTY_ADDR = "<no-account>" as AccountAddr;
 
 export type ContractTileInfo = {
+    _id: any;
     id: ContractTileID;
     owner: AccountAddr;
     tokenId: ContractTokenID;
@@ -17,6 +18,7 @@ export type ContractTileInfo = {
 };
 
 export type ContractTokenInfo = {
+    _id: any;
     id: ContractTokenID;
     owner: AccountAddr;
     price: string;
@@ -36,5 +38,6 @@ export interface IDataService {
     fetchTokenInfo(id: ContractTokenID): Promise<ContractTokenInfo>;
     fetchTiles(): Promise<ContractTileInfo[]>;
     groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]>;
+    buyTiles(tiles: ITileState[], url: string): Promise<[boolean, string]>;
     mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]>;
 }
