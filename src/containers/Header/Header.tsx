@@ -34,13 +34,16 @@ const Header = (props: IHeaderProps) => {
         });
         return () => sub.unsubscribe();
     }, [filterBtn$, event$, togglesStateRef]);
+
     useEffect(() => {
         const sub = selectedCells$.subscribe((cells) => {
-            console.log('%c filterBtn ev: ', 'background-color: brown; color: white;', cells);
+            console.log('%c selectedCells ev: ', 'background-color: brown; color: white;', cells);
             setCells([...cells]);
         });
         return () => sub.unsubscribe();
     }, [selectedCells$]);
+
+
     return <header>
         <div className="header_content">
             <div className="flex-cnt align-center mx-4">
@@ -83,11 +86,11 @@ const Header = (props: IHeaderProps) => {
                             action={ { type: togglesState[0] === 1 ? CartEvents.Open : CartEvents.Modify, payload: [] } }
                             light
                             color="info"
-                            title={ togglesState[0] === 1 ? "Details" : "Modify" }
+                            title={ togglesState[0] === 1 ? "Buy" : "Modify" }
                         />
                     </div>
                     <div className="flex-cnt item shrink badge-cnt">
-                        { !!cells.length && <div className="badge badge--primary">{ togglesState[0] === 1 ? '!' : cells.length }</div> }
+                        { !!cells.length && <div className="badge badge--info">{ togglesState[0] === 1 ? '!' : cells.length }</div> }
                     </div>
                 </div>
             </div>

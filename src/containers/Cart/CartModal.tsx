@@ -146,7 +146,7 @@ const CartModal = (props: ICartModalProps) => {
                                                     <Button color="close" textAlign="left" noActive title="price (Eth)" small />
                                                 </div>
                                                 <div className="flex-cnt item justify-end fb-4">
-                                                    <Button color="info" noActive title={ '# ' + cellData.cellNumber + 1 } small />
+                                                    <Button color="info" noActive title={ `# ${cellData.cellNumber + 1}` } small />
                                                 </div>
                                                 <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
                                                     <Input noActive color="header" value={ cellData.token ? '' + cellData.token.price : '' } />

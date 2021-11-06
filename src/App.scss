@@ -281,7 +281,7 @@ header {
     &.btn--full-width {
         width: 100%;
     }
-    
+
     &.btn--align-left .btn-text {
         justify-content: flex-start !important;
     }
@@ -657,7 +657,7 @@ header {
     user-select: none;
     background-color: $headerBgColor;
     &.badge--light {
-        background-color: lighten($headerBgColor, 35%);
+        background-color: darken($headerBgColor, 25%);
         border: 2px solid darken($headerBgColor, 10%);
     }
     &.badge--primary {
@@ -667,6 +667,14 @@ header {
         }
         border-color: #64dd17;
         color: #64dd17;
+    }
+    &.badge--info {
+        &.badge--light {
+            color: darken(#039be5, 10%);
+            border-color: darken(#039be5, 10%);
+        }
+        border-color: #90dcff;
+        color: #f0faff;
     }
 }
 
