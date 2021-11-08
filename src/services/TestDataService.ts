@@ -30,7 +30,7 @@ import {
 } from "./interfaces";
 import { fromContractTile } from "./mappers";
 
-const TEST_OWNER_ADDR = "test-owner-2" as AccountAddr;
+const TEST_OWNER_ADDR = "test-owner-1" as AccountAddr;
 
 const ERROR_TOKEN: ContractTokenInfo = {
     _id: 1,
@@ -49,6 +49,7 @@ const tileToFirebaseMapper = (item: ContractTileInfo): any => {
         tokenId: '' + item.tokenId,
         title: item.title,
         url: item.url,
+        version: item.version || 0,
         boundedTiles: item.boundedTiles ? item.boundedTiles.map(t => '' + t).join(',') : ''
     };
 };
@@ -56,6 +57,7 @@ const tileToFirebaseMapper = (item: ContractTileInfo): any => {
 const tileFirebaseMapper = (item: any): ContractTileInfo => {
     return {
         _id: item._id,
+        version: item.version || 0,
         id: (Number(item.id)) as ContractTileID,
         owner: item.owner,
         tokenId: (Number(item.tokenId)) as ContractTokenID,
@@ -178,6 +180,7 @@ export default class DataService implements IDataService {
                         tileToFirebaseMapper({
                             ...tileData.tile,
                             url: !i ? groupUrl : '',
+                            version: tileData.tile.version + 1,
                             boundedTiles: !i ? [...ifParentBounds] : [...ifInGroupTileBounds]
                         })
                     )
@@ -248,7 +251,8 @@ export default class DataService implements IDataService {
                     doc(this._db, 'tiles', t._id),
                     tileToFirebaseMapper({
                         ...t,
-                        boundedTiles: t.boundedTiles.filter(x => x !== buyingTileId)
+                        boundedTiles: t.boundedTiles.filter(x => x !== buyingTileId),
+                        version: t.version + 1
                     })
                 ))
             );
@@ -260,7 +264,7 @@ export default class DataService implements IDataService {
 
                     return updateDoc(
                         doc(this._db, 'tiles', tileData.tile._id),
-                        tileToFirebaseMapper({ ...tileData.tile, url, owner: currAcc, boundedTiles: [] })
+                        tileToFirebaseMapper({ ...tileData.tile, url, owner: currAcc, boundedTiles: [], version: tileData.tile.version + 1 })
                     )
                 })
             );
@@ -312,6 +316,7 @@ export default class DataService implements IDataService {
                         tileToFirebaseMapper({
                             id: tileData.cellNumber as ContractTileID,
                             _id: undefined,
+                            version: 0,
                             boundedTiles: [],
                             owner: this.getAccount() || EMPTY_ADDR,
                             title: new Date().toLocaleString(),

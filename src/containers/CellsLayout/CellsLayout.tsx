@@ -137,20 +137,25 @@ const Component = (props: ICellsLayoutProps) => {
         const sub = dataService.getState().subscribe(val => {
             console.log('new state', { ...val });
 
-            const cellEventsRef = event$.getValue();
+            const cellEvents = event$.getValue();
 
             const updatesRef = cellTileUpdatesRef.current;
             // TODO: too complex
-            const cellEventOfIndex = cellEventsRef.reduce((acc, t, i) => ({ ...acc, [t.curr.cellNumber]: i }), {} as { [id: number]: number });
+            const cellEventOfIndex = cellEvents.reduce((acc, t, i) => ({ ...acc, [t.curr.cellNumber]: i }), {} as { [id: number]: number });
             const contractTilesData: { [id: number]: [number, ITileState]; } = {};
             let isUpdateNeeds = false;
-            val.tileCells.forEach(tile => {
+
+            const displayingUpdatedTiles: ITileState[] = [];
+
+            val.tileCells.forEach(tileData => {
                 // new \ updated Tile
-                console.log('tile', tile, cellEventOfIndex);
-                contractTilesData[tile.cellNumber] = [val.lastUpdate, { ...tile }];
-                if (!updatesRef[tile.cellNumber] || updatesRef[tile.cellNumber] < val.lastUpdate) {
-                    updatesRef[tile.cellNumber] = val.lastUpdate;
-                    if (cellEventOfIndex[tile.cellNumber] > 0) {
+                contractTilesData[tileData.cellNumber] = [val.lastUpdate, { ...tileData }];
+                if (!updatesRef[tileData.cellNumber] || updatesRef[tileData.cellNumber] < tileData.tile.version + 1) {
+                    console.log('tile', tileData, cellEventOfIndex, [...cellEvents]);
+                    console.log('contractTilesData:cellNumber', tileData.cellNumber, tileData.tile.version, contractTilesData[tileData.cellNumber]);
+                    updatesRef[tileData.cellNumber] = tileData.tile.version + 1;
+                    displayingUpdatedTiles.push({ ...tileData });
+                    if (cellEventOfIndex[tileData.cellNumber] > 0) {
                         // cellEventsRef[cellEventOfIndex[tile.cellNumber]].contractTile = { ...tile.tile };
                         isUpdateNeeds = true;
                     }
@@ -158,8 +163,7 @@ const Component = (props: ICellsLayoutProps) => {
             });
 
             if (isUpdateNeeds) {
-                // event$.next([...cellEventsRef]);
-                cellsUpdate$.next([CellEventTypes.UpdateByContract, [...cellEventsRef]]);
+                cellsUpdate$.next([CellEventTypes.UpdateByContract, [...cellEvents]]);
             }
 
             // TODO: use [ Map<CellNumber, ITileState>, ITileState[] ] as [ aTilesMap, tilesForUpdate ]
@@ -183,10 +187,12 @@ const Component = (props: ICellsLayoutProps) => {
                 filteredCellsRef.current = [...highlights];
             }
 
+            // display updated tiles
             cellsGridEvent$.next({
                 displayCells: [],
                 clearCells: [],
-                displayTiles: [...val.tileCells],
+                displayTiles: [...displayingUpdatedTiles],
+                // displayTiles: [...val.tileCells],
                 clearTiles: [],
                 highlightCells: [...highlights],
                 shadeCells: []

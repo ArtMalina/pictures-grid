@@ -14,6 +14,7 @@ export type ContractTileInfo = {
     tokenId: ContractTokenID;
     url: string;
     title: string;
+    version: number;
     boundedTiles: ContractTileID[];
 };
 

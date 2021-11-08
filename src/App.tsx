@@ -142,8 +142,10 @@ const App = () => {
             if (ev.type === CartEvents.Buy) {
                 const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
 
-                if (tiles.length) dataService.buyTiles([...tiles] as ITileState[], ev.groupUrl);
-                else {
+                if (tiles.length) {
+                    cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
+                    dataService.buyTiles([...tiles] as ITileState[], ev.groupUrl);
+                } else {
                     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
                     dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);
                 }

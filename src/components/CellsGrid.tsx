@@ -157,11 +157,9 @@ const drawTileCell = (ctx2d: CanvasRenderingContext2D, tileCell: ITileState, _ca
 
 
         if (tileCell.tile.boundedTiles.length && tileCell.tile.boundedTiles[0] === tileCell.tile.id) {
-            console.warn('draw image', img, tileCell.tile);
             drawBoundedTilesImage(ctx2d, img, tileCell.tile.boundedTiles.map(t => getPointByCellNumber(t)), [w, h], borderWidth);
             return;
         }
-        console.log('draw tile cell', tileCell);
         // const natW = img.naturalWidth;
         // const natH = img.naturalHeight;
         // ctx.drawImage(img, 0, 0, natW, natH, x, y, w, h);
@@ -185,14 +183,7 @@ const drawBoundedTilesImage = (
 
     const { left, right, bottom, top } = getBoundTilesCorners(boundedCellsCoords);
 
-    console.warn('corners: left', left);
-    console.warn('corners: right', right);
-    console.warn('corners: top', top);
-    console.warn('corners: bottom', bottom);
-
     const [dx, dy] = [right[0] - left[0] + 1, bottom[1] - top[1] + 1];
-
-    console.log('dx dy in bounded ', dx, dy, borderWidth);
 
     const getCropPoint = getPointByArea(
         image.width / dx,
@@ -205,11 +196,8 @@ const drawBoundedTilesImage = (
     const getRealPoint = getPointByArea(w, h, 1, 1, 0, 0);
 
     boundedCellsCoords.forEach(t => {
-        console.log('t', t);
         const [cropX, cropY, cropW, cropH] = getCropPoint([t[0], t[1], 1, 1]);
         const [realX, realY, realW, realH] = getRealPoint([t[0], t[1], 1, 1]);
-        console.log('%c crop x-y-w-h ', 'background-color: brown;color: white', cropX, cropY, cropW, cropH);
-        console.log('%c real x-y-w-h ', 'background-color: brown;color: white', realX, realY, realW, realH);
         const ofstX = borderWidth * 0.5 + borderWidth * t[0];
         const ofstY = borderWidth * 0.5 + borderWidth * t[1];
         ctx2d.drawImage(
@@ -246,8 +234,6 @@ const CellsGrid = (props: ICellsGridProps) => {
                 clearTiles: tilesForClear,
                 highlightCells,
             } = ev;
-            // console.log('cellsEvData: displaying', displaying);
-            // console.log('cellsEvData: clearing', clearing);
             canvas2dCtxInList$.getValue().forEach(ctx2d => {
 
                 let clearedCellNumberMap: any = {};
@@ -255,7 +241,6 @@ const CellsGrid = (props: ICellsGridProps) => {
                 const displayHoverSelectedCells: ICellsGridEvent[] = [];
 
                 tilesForDisplay.forEach(tileCell => {
-                    console.log('%c tileCell ', 'background-color: grey; color: blue;', tileCell);
                     drawTileCell(ctx2d, tileCell, canvasSize, [cellW, cellH], cellBorderWidth);
                 });
 
