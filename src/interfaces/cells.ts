@@ -64,6 +64,7 @@ export type IUnmintedTileState = ICellData & Partial<TileData>;
 
 export type TilesEventCart = {
     payload: IUnmintedTileState[];
+    params?: Partial<ContractTileInfo>;
     type:
     | CartEvents.Close
     | CartEvents.None

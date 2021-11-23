@@ -26,6 +26,7 @@ import {
     ContractTokenInfo,
     DataServiceState,
     EMPTY_ADDR,
+    FormTileData,
     IDataService
 } from "./interfaces";
 import { fromContractTile } from "./mappers";
@@ -193,7 +194,7 @@ export default class DataService implements IDataService {
         }
     }
 
-    async buyTiles(tiles: ITileState[], url: string): Promise<[boolean, string]> {
+    async buyTiles(tiles: ITileState[], formTileData: Partial<FormTileData>): Promise<[boolean, string]> {
         // 1. send to MANAGING_CONTRACT groups of tiles
         // 2. update tiles (from TIMER, but for TEST: update manually here)
         console.log('%c buy tiles ', 'background-color: orange; color: darkcyan', tiles);
@@ -257,17 +258,23 @@ export default class DataService implements IDataService {
                 ))
             );
 
-            await Promise.all(
-                tiles.map((tileData, i) => {
+            await Promise.all([
+                ...tiles.map((tileData, i) => {
                     const storedTile = storedTiles.find(t => t._id === tileData.tile._id);
                     if (!storedTile) return Promise.reject(`no tile found (# ${tileData.cellNumber})`);
 
                     return updateDoc(
                         doc(this._db, 'tiles', tileData.tile._id),
-                        tileToFirebaseMapper({ ...tileData.tile, url, owner: currAcc, boundedTiles: [], version: tileData.tile.version + 1 })
+                        tileToFirebaseMapper({ ...tileData.tile, title: formTileData.title || '', url: formTileData.url || '', owner: currAcc, boundedTiles: [], version: tileData.tile.version + 1 })
+                    )
+                }),
+                ...tiles.map(tile => {
+                    return updateDoc(
+                        doc(this._db, 'tokens', tile.token._id),
+                        tokenToFirebaseMapper({ ...tile.token, price: formTileData.price || tile.token.price })
                     )
                 })
-            );
+            ]);
 
             await this.fetchTiles();
 
@@ -278,7 +285,7 @@ export default class DataService implements IDataService {
         }
     }
 
-    async mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]> {
+    async mintTiles(tiles: IUnmintedTileState[], updatedTile: Partial<FormTileData>): Promise<[boolean, string]> {
 
         console.log('mintTiles', tiles);
 
@@ -303,7 +310,7 @@ export default class DataService implements IDataService {
                             id: tileData.cellNumber as ContractTokenID,
                             _id: undefined,
                             owner: this.getAccount() || EMPTY_ADDR,
-                            price: '2.5'
+                            price: updatedTile.price || '2.5'
                         })
                     )
                 )
@@ -319,8 +326,8 @@ export default class DataService implements IDataService {
                             version: 0,
                             boundedTiles: [],
                             owner: this.getAccount() || EMPTY_ADDR,
-                            title: new Date().toLocaleString(),
-                            url: groupUrl,
+                            title: updatedTile.title || '',
+                            url: updatedTile.url || '',
                             tokenId: tileData.cellNumber as ContractTokenID,
                         })
                     )

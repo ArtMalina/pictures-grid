@@ -5,7 +5,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
 import { CartEvents, TilesEventCart, ICellEventData, IUnmintedTileState } from '../../interfaces/cells';
-import { ContractTileInfo } from '../../services/interfaces';
+import { ContractTileInfo, FormTileData } from '../../services/interfaces';
 
 export interface ICartModalProps {
     event$: Subject<TilesEventCart>;
@@ -36,10 +36,10 @@ const CartModal = (props: ICartModalProps) => {
         return t.tile.url || acc;
     }, '');
 
-    const input$ = useMemo(() => new BehaviorSubject<[string, keyof ContractTileInfo | null]>([groupAvatarUrl || '', null]), [groupAvatarUrl]);
-    const inputDataRef = useRef<Partial<ContractTileInfo>>({});
+    const input$ = useMemo(() => new BehaviorSubject<[string, keyof FormTileData | null]>([groupAvatarUrl || '', null]), [groupAvatarUrl]);
+    const inputDataRef = useRef<Partial<FormTileData>>({});
 
-    useEffect(() => { 
+    useEffect(() => {
         const sub = input$.subscribe(([val, key]) => {
             if (key) {
                 inputDataRef.current[key] = val;
@@ -72,6 +72,7 @@ const CartModal = (props: ICartModalProps) => {
                     if (tilesRef.current.length) {
                         event$.next({
                             type: CartEvents.Buy,
+                            params: inputDataRef.current && { ...inputDataRef.current },
                             payload: tilesRef.current.map(t => ({ ...t })),
                             groupUrl: input$.getValue()[0]
                         });
@@ -102,7 +103,7 @@ const CartModal = (props: ICartModalProps) => {
             launcherSub.unsubscribe();
             sub.unsubscribe();
         };
-    }, [event$, modalEvent$, tilesRef, input$]);
+    }, [event$, modalEvent$, tilesRef, input$, inputDataRef]);
 
     useEffect(() => {
         const sub = remove$.subscribe((val) => {
@@ -155,25 +156,25 @@ const CartModal = (props: ICartModalProps) => {
                                                 style={ { marginBottom: 8, backgroundColor: 'white' } }
                                             >
                                                 <div className="flex-cnt item fb-4 shrink">
-                                                    <Button color="close" textAlign="left" noActive title="price (Eth)" small />
+                                                    <Button color="header" textAlign="left" noActive title="price (Eth)" small />
                                                 </div>
                                                 <div className="flex-cnt item justify-end fb-4">
                                                     <Button color="info" noActive title={ `# ${cellData.cellNumber + 1}` } small />
                                                 </div>
                                                 <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                    <Input noActive color="header" value={ cellData.token ? '' + cellData.token.price : '' } />
+                                                    <Input color="header" event$={ input$ } action="price" value={ cellData.token ? '' + cellData.token.price : '' } />
                                                 </div>
                                                 <div className="flex-cnt item fb-4 shrink">
                                                     <Button color="close" textAlign="left" noActive title="image url" small />
                                                 </div>
                                                 <div className="flex-cnt item fb-10 mt-1 mb-4">
-                                                    <Input event$={ input$ } noActive={ !!cellData.tile } value={ cellData.tile ? cellData.tile.url || '' : '' } />
+                                                    <Input event$={ input$ } action="url" value={ cellData.tile ? cellData.tile.url || '' : '' } />
                                                 </div>
                                                 <div className="flex-cnt item fb-4 shrink">
                                                     <Button color="close" textAlign="left" noActive title="title" small />
                                                 </div>
                                                 <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                    <Input noActive color="header" value={ cellData.tile ? '' + cellData.tile.title : '' } />
+                                                    <Input event$={ input$ } action="title" color="header" value={ cellData.tile ? '' + cellData.tile.title : '' } />
                                                 </div>
                                                 <div className="flex-cnt item fb-4 shrink">
                                                     <Button color="close" textAlign="left" noActive title="bounded tiles" small />

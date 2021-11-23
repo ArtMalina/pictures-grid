@@ -11,10 +11,10 @@ import {
 } from "./interfaces";
 
 export default class DataService implements IDataService {
-    buyTiles(tiles: ITileState[], url: string): Promise<[boolean, string]> {
+    buyTiles(tiles: ITileState[], tileData: Partial<ContractTileInfo>): Promise<[boolean, string]> {
         throw new Error("Method not implemented.");
     }
-    mintTiles(tiles: IUnmintedTileState[], groupUrl: string): Promise<[boolean, string]> {
+    mintTiles(tiles: IUnmintedTileState[], tileData: Partial<ContractTileInfo>): Promise<[boolean, string]> {
         throw new Error("Method not implemented.");
     }
     groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]> {

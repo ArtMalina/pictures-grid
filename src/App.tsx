@@ -16,7 +16,7 @@ import { CellEventTypes, CellsEvent } from './containers/CellsLayout/CellsLayout
 
 import ServiceContext from './contexts/ServiceContext';
 import TestDataService from './services/TestDataService';
-import { AccountAddr, EMPTY_ADDR } from './services/interfaces';
+import { AccountAddr, ContractTileInfo, EMPTY_ADDR, FormTileData } from './services/interfaces';
 
 const App = () => {
 
@@ -142,12 +142,15 @@ const App = () => {
             if (ev.type === CartEvents.Buy) {
                 const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
 
+                let tileData: Partial<FormTileData> = ev.params ? { ...ev.params } : {};
+                tileData.url = tileData.url || ev.groupUrl;
+
                 if (tiles.length) {
                     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
-                    dataService.buyTiles([...tiles] as ITileState[], ev.groupUrl);
+                    dataService.buyTiles([...tiles] as ITileState[], tileData);
                 } else {
                     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
-                    dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);
+                    dataService.mintTiles([...ev.payload] as IUnmintedTileState[], tileData);
                 }
             }
             if (ev.type === CartEvents.RemoveItems) {
