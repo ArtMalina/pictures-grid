@@ -131,9 +131,10 @@ const App = () => {
             // const DATA_SERVICE_STATE = dataService.getState().getValue();
 
             if (ev.type === CartEvents.SaveTiles) {
+                // TASK: update TILE BOUNDS when regrouping!
                 const tiles = ev.payload.filter(t => !!t.tile && !!t.token);
 
-                if (tiles.length) dataService.groupTiles([...tiles] as ITileState[], ev.groupUrl);
+                if (tiles.length) dataService.groupTiles([...tiles] as ITileState[], ev.params || {});
                 // else {
                 //     cellsUpdate$.next([CellEventTypes.DisplayAll, []]);
                 //     dataService.mintTiles([...ev.payload] as IUnmintedTileState[], ev.groupUrl);

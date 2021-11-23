@@ -1,4 +1,4 @@
-﻿import { FirebaseApp, initializeApp } from "firebase/app";
+import { FirebaseApp, initializeApp } from "firebase/app";
 import {
     getFirestore,
     collection,
@@ -159,7 +159,7 @@ export default class DataService implements IDataService {
         }
     }
 
-    async groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]> {
+    async groupTiles(tiles: ITileState[], formTileData: Partial<FormTileData>): Promise<[boolean, string]> {
         // 1. send to MANAGING_CONTRACT groups of tiles
         // 2. update tiles (from TIMER, but for TEST: update manually here)
         const sortedTiles = tiles.sort((a, b) => a.cellNumber > b.cellNumber ? 1 : -1);
@@ -167,12 +167,24 @@ export default class DataService implements IDataService {
         if (!tiles.length) {
             return [false, 'no tiles for grouping'];
         }
-
+        const updContractTilePart: Partial<ContractTileInfo> = sortedTiles.length === 1
+            ? { url: formTileData.url || '', title: formTileData.title || '' }
+            : {};
+        const tokensPromises = sortedTiles.length === 1 ? [
+            updateDoc(
+                doc(this._db, 'tokens', sortedTiles[0].token._id),
+                tokenToFirebaseMapper({
+                    ...sortedTiles[0].token,
+                    price: formTileData.price || sortedTiles[0].token.price
+                })
+            )
+        ] : [];
         try {
-            await Promise.all(
-                sortedTiles.map((tileData, i) => {
-                    const ifParentBounds = groupUrl && !i ? [...sortedTiles.map(k => k.tile.id)] : [];
-                    const ifInGroupTileBounds = groupUrl && !!i ? [sortedTiles[0].tile.id] : []
+            await Promise.all([
+                ...tokensPromises,
+                ...sortedTiles.map((tileData, i) => {
+                    const ifParentBounds = formTileData.url && !i ? [...sortedTiles.map(k => k.tile.id)] : [];
+                    const ifInGroupTileBounds = formTileData.url && !!i ? [sortedTiles[0].tile.id] : []
                     return updateDoc(
                         doc(
                             this._db, 'tiles',
@@ -180,13 +192,14 @@ export default class DataService implements IDataService {
                         ),
                         tileToFirebaseMapper({
                             ...tileData.tile,
-                            url: !i ? groupUrl : '',
+                            ...updContractTilePart,
+                            url: !i ? formTileData.url || '' : '',
                             version: tileData.tile.version + 1,
                             boundedTiles: !i ? [...ifParentBounds] : [...ifInGroupTileBounds]
                         })
                     )
                 })
-            );
+            ]);
             await this.fetchTiles();
             return [true, ''];
         } catch (error) {

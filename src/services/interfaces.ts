@@ -46,7 +46,7 @@ export interface IDataService {
     getTileInfo(id: ContractTileID): Promise<ContractTileInfo | undefined>;
     fetchTokenInfo(id: ContractTokenID): Promise<ContractTokenInfo>;
     fetchTiles(): Promise<ContractTileInfo[]>;
-    groupTiles(tiles: ITileState[], groupUrl: string): Promise<[boolean, string]>;
+    groupTiles(tiles: ITileState[], tileData: Partial<FormTileData>): Promise<[boolean, string]>;
     buyTiles(tiles: ITileState[], tileData: Partial<FormTileData>): Promise<[boolean, string]>;
     mintTiles(tiles: IUnmintedTileState[], tileData: Partial<FormTileData>): Promise<[boolean, string]>;
 }

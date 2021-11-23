@@ -79,13 +79,15 @@ const CartModal = (props: ICartModalProps) => {
                     }
                 } else if (val.type === CartEvents.Save) {
                     if (tilesRef.current.length) {
+                        const inputData = inputDataRef.current;
                         event$.next({
                             type: CartEvents.SaveTiles,
                             payload: [...tilesRef.current],
-                            groupUrl: input$.getValue()[0]
+                            groupUrl: inputData ? inputData.url || '' : '', //input$.getValue()[0],
+                            params: inputData && { ...inputData }
                         });
                     } else {
-                        event$.next(val);
+                        event$.next({ ...val });
                     }
                 }
                 tilesRef.current = [];
@@ -121,9 +123,11 @@ const CartModal = (props: ICartModalProps) => {
                 <Modal title="Crypto tiles" width={ 770 } height={ 450 } event$={ cartEvent$ } open={ tilesState[0] !== CartOpenTypes.None }>
                     <div className="flex-cnt item wrap content-start overflow px-2">
                         {
-                            tilesState[0] === CartOpenTypes.ModifyCellsMode && <div className="flex-cnt item wrap fb-10 px-2 my-2">
+                            tilesState[0] === CartOpenTypes.ModifyCellsMode
+                            && tilesState[1].length > 1
+                            && <div className="flex-cnt item wrap fb-10 px-2 my-2">
                                 <Button color="secondary" noActive title={ tilesState[1].length > 1 ? 'group url' : "url" } small />
-                                <Input event$={ input$ } value={ groupAvatarUrl } />
+                                <Input event$={ input$ } action="url" value={ groupAvatarUrl } />
                             </div>
                         }
                         <div className="flex-cnt item justify-start fb-10 wrap px-2 py-3">
@@ -133,7 +137,9 @@ const CartModal = (props: ICartModalProps) => {
                                 </div>
                             }
                             {
-                                tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].map(cellData =>
+                                tilesState[0] === CartOpenTypes.ModifyCellsMode
+                                && tilesState[1].length > 1
+                                && tilesState[1].map(cellData =>
                                     <div
                                         key={ cellData.cellNumber }
                                         className="flex-cnt item wrap fb-2 align-center shrink mx-1 px-3 py-1"
@@ -147,7 +153,9 @@ const CartModal = (props: ICartModalProps) => {
                                 )
                             }
                             {
-                                tilesState[0] === CartOpenTypes.BuyCellsMode && <div className="flex-cnt item wrap justify-start fb-10">
+                                (tilesState[0] === CartOpenTypes.BuyCellsMode
+                                    || (tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length === 1))
+                                && <div className="flex-cnt item wrap justify-start fb-10">
                                     {
                                         tilesState[1].map(cellData =>
                                             <div
