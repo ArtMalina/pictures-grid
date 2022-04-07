@@ -91,6 +91,7 @@ const CartModal = (props: ICartModalProps) => {
                     }
                 }
                 tilesRef.current = [];
+                inputDataRef.current = {};
                 input$.next(['', null]);
                 setTilesState([CartOpenTypes.None, []]);
             }

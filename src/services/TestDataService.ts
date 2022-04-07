@@ -237,7 +237,7 @@ export default class DataService implements IDataService {
                 }, []
             );
             const parentStoredTilesSnapshot = await Promise.all<[QuerySnapshot<DocumentData>, ContractTileID]>(
-                parentTilesTupleIds.map(([parenTileId, buyingTileId]) => {
+                parentTilesTupleIds.map<Promise<[QuerySnapshot<DocumentData>, ContractTileID]>>(([parenTileId, buyingTileId]) => {
                     return new Promise(async (resolve, reject) => {
                         try {
                             const doc = await getDocs(query(

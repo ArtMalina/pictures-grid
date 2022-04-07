@@ -156,7 +156,6 @@ const Component = (props: ICellsLayoutProps) => {
                     updatesRef[tileData.cellNumber] = tileData.tile.version + 1;
                     displayingUpdatedTiles.push({ ...tileData });
                     if (cellEventOfIndex[tileData.cellNumber] > 0) {
-                        // cellEventsRef[cellEventOfIndex[tile.cellNumber]].contractTile = { ...tile.tile };
                         isUpdateNeeds = true;
                     }
                 }
@@ -378,7 +377,12 @@ const Component = (props: ICellsLayoutProps) => {
                         // console.log('t.contractTile is CURRENT_ADDR', CURRENT_ADDR, contractTiles[t.curr.cellNumber]);
                         // console.log('t.contractTile is owner', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner);
                         // console.log('t.contractTile is owner == myAddr', contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR);
-                        if (MODE === MyModes.Buy && t.mouseType === MyCanvasMouseEvents.Click && contractTiles[t.curr.cellNumber] && contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR) {
+                        if (
+                            MODE === MyModes.Buy &&
+                            t.mouseType === MyCanvasMouseEvents.Click &&
+                            contractTiles[t.curr.cellNumber] &&
+                            contractTiles[t.curr.cellNumber][1].tile.owner === CURRENT_ADDR
+                        ) {
                             return;
                         }
 
@@ -386,8 +390,8 @@ const Component = (props: ICellsLayoutProps) => {
                             // click on new [ NON-EDIT mode ] 
                             // - ignore selected (only one selected is allowed)
                             if (t.curr.cellNumber !== newCellData.cellNumber) {
-                                result.clear.push({ ...t.curr, mouseType: evType });
-                                return;
+                                // result.clear.push({ ...t.curr, mouseType: evType });
+                                // return;
                             }
                         }
 

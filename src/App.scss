@@ -506,12 +506,10 @@ header {
             }
 
             &.btn--untoggled {
-                color: darken(#fff59d, 40%) !important;
-                background-color: #242000;
-                // background-color: darken(#fff59d, 55%);
+                opacity: 0.4;
                 & .btn-text {
-                    color: darken(#fff59d, 40%) !important;
-                    border: 2px solid darken(#fff59d, 40%);
+                    background-color: #b6a512;
+                    border: 2px solid #fff59d;
                     padding-bottom: 2px;
                 }
             }
