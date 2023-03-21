@@ -1,48 +1,27 @@
 {
-  "name": "pictures-grid",
-  "version": "0.1.0",
-  "private": false,
-  "homepage": "https://artmalina.github.io/pictures-grid",
-  "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.4.0",
-    "@testing-library/user-event": "^7.1.2",
-    "@types/jest": "^24.0.23",
-    "@types/node": "^12.20.47",
-    "@types/react": "^16.14.24",
-    "@types/react-dom": "^16.9.14",
-    "firebase": "^9.6.10",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "^5.0.0",
-    "rxjs": "^6.6.3",
-    "typescript": "^4.6.3"
-  },
+  "name": "vite-pictures-grid",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "predeploy": "react-scripts build",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "deploy": "gh-pages -d build"
   },
-  "eslintConfig": {
-    "extends": "react-app"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "dependencies": {
+    "firebase": "^9.6.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rxjs": "^6.6.3"
   },
   "devDependencies": {
-    "gh-pages": "^3.2.3",
-    "node-sass": "^4.14.1"
+    "@types/react": "^18.0.28",
+    "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react-swc": "^3.0.0",
+    "sass": "^1.59.3",
+    "typescript": "^4.9.3",
+    "vite": "^4.2.0",
+    "gh-pages": "^3.2.3"
   }
 }
