@@ -30,6 +30,7 @@ export type ICellEventData = {
 export enum CartEvents {
     None = 'None',
     Open = 'Open',
+    Clear = 'Clear',
     Close = 'Close',
     Save = 'Save',
     Buy = 'Buy',

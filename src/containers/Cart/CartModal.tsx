@@ -36,7 +36,10 @@ const CartModal = (props: ICartModalProps) => {
         return t.tile.url || acc;
     }, '');
 
-    const input$ = useMemo(() => new BehaviorSubject<[string, keyof FormTileData | null]>([groupAvatarUrl || '', null]), [groupAvatarUrl]);
+    const input$ = useMemo(
+        () => new BehaviorSubject<[string, keyof FormTileData | null]>([groupAvatarUrl || '', null]),
+        [groupAvatarUrl]
+    );
     const inputDataRef = useRef<Partial<FormTileData>>({});
 
     useEffect(() => {
@@ -51,7 +54,7 @@ const CartModal = (props: ICartModalProps) => {
     // const [state, setState] = useState<StateWithOpenStatus>([false]);
     // const stateRef = useRef<ICellEventData[]>(state[1] || []);
     useEffect(() => {
-        const launcherSub = event$.subscribe(val => {
+        const launcherSub = event$.subscribe((val) => {
             console.log('%c event$ in cart-modal: ', 'border: 1px solid green', val, input$.getValue());
             // if (val.type === CartEvents.Open) {
             //     stateRef.current = [...val.payload];
@@ -61,7 +64,10 @@ const CartModal = (props: ICartModalProps) => {
             if (val.type === CartEvents.Modify || val.type === CartEvents.Open) {
                 input$.next(['', null]);
                 tilesRef.current = [...val.payload];
-                setTilesState([val.type === CartEvents.Modify ? CartOpenTypes.ModifyCellsMode : CartOpenTypes.BuyCellsMode, [...val.payload]]);
+                setTilesState([
+                    val.type === CartEvents.Modify ? CartOpenTypes.ModifyCellsMode : CartOpenTypes.BuyCellsMode,
+                    [...val.payload],
+                ]);
                 cartEvent$.next(val);
             }
         });
@@ -73,8 +79,8 @@ const CartModal = (props: ICartModalProps) => {
                         event$.next({
                             type: CartEvents.Buy,
                             params: inputDataRef.current && { ...inputDataRef.current },
-                            payload: tilesRef.current.map(t => ({ ...t })),
-                            groupUrl: input$.getValue()[0]
+                            payload: tilesRef.current.map((t) => ({ ...t })),
+                            groupUrl: input$.getValue()[0],
                         });
                     }
                 } else if (val.type === CartEvents.Save) {
@@ -84,7 +90,7 @@ const CartModal = (props: ICartModalProps) => {
                             type: CartEvents.SaveTiles,
                             payload: [...tilesRef.current],
                             groupUrl: inputData ? inputData.url || '' : '', //input$.getValue()[0],
-                            params: inputData && { ...inputData }
+                            params: inputData && { ...inputData },
                         });
                     } else {
                         event$.next({ ...val });
@@ -97,7 +103,9 @@ const CartModal = (props: ICartModalProps) => {
             }
 
             if (val.type === CartEvents.RemoveItems) {
-                tilesRef.current = tilesRef.current.filter(t => val.payload.findIndex(x => x.cellNumber === t.cellNumber) < 0);
+                tilesRef.current = tilesRef.current.filter(
+                    (t) => val.payload.findIndex((x) => x.cellNumber === t.cellNumber) < 0
+                );
                 setTilesState([CartOpenTypes.ModifyCellsMode, [...tilesRef.current]]);
                 event$.next(val);
             }
@@ -121,94 +129,132 @@ const CartModal = (props: ICartModalProps) => {
     return (
         <div>
             {
-                <Modal title="Crypto tiles" width={ 770 } height={ 450 } event$={ cartEvent$ } open={ tilesState[0] !== CartOpenTypes.None }>
+                <Modal
+                    title="Crypto tiles"
+                    width={770}
+                    height={450}
+                    event$={cartEvent$}
+                    open={tilesState[0] !== CartOpenTypes.None}
+                >
                     <div className="flex-cnt item wrap content-start overflow px-2">
-                        {
-                            tilesState[0] === CartOpenTypes.ModifyCellsMode
-                            && tilesState[1].length > 1
-                            && <div className="flex-cnt item wrap fb-10 px-2 my-2">
-                                <Button color="secondary" noActive title={ tilesState[1].length > 1 ? 'group url' : "url" } small />
-                                <Input event$={ input$ } action="url" value={ groupAvatarUrl } />
+                        {tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length > 1 && (
+                            <div className="flex-cnt item wrap fb-10 px-2 my-2">
+                                <Button
+                                    color="secondary"
+                                    noActive
+                                    title={tilesState[1].length > 1 ? 'group url' : 'url'}
+                                    small
+                                />
+                                <Input event$={input$} action="url" value={groupAvatarUrl} />
                             </div>
-                        }
+                        )}
                         <div className="flex-cnt item justify-start fb-10 wrap px-2 py-3">
-                            {
-                                tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length > 1 && <div className="flex-cnt item fb-10 my-2">
+                            {tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length > 1 && (
+                                <div className="flex-cnt item fb-10 my-2">
                                     <Button color="secondary" noActive title="group tiles" small />
                                 </div>
-                            }
-                            {
-                                tilesState[0] === CartOpenTypes.ModifyCellsMode
-                                && tilesState[1].length > 1
-                                && tilesState[1].map(cellData =>
+                            )}
+                            {tilesState[0] === CartOpenTypes.ModifyCellsMode &&
+                                tilesState[1].length > 1 &&
+                                tilesState[1].map((cellData) => (
                                     <div
-                                        key={ cellData.cellNumber }
+                                        key={cellData.cellNumber}
                                         className="flex-cnt item wrap fb-2 align-center shrink mx-1 px-3 py-1"
-                                        style={ { marginBottom: 8, backgroundColor: 'white' } }
+                                        style={{ marginBottom: 8, backgroundColor: 'white' }}
                                     >
-                                        <div className="flex-cnt item fb-4 modal_cell-item">{ cellData.cellNumber + 1 }</div>
+                                        <div className="flex-cnt item fb-4 modal_cell-item">{cellData.cellNumber + 1}</div>
                                         <div className="flex-cnt item fb-3 justify-end">
-                                            <Button action={ cellData } light color="error" title="X" small event$={ remove$ } />
+                                            <Button action={cellData} light color="error" title="X" small event$={remove$} />
                                         </div>
                                     </div>
-                                )
-                            }
-                            {
-                                (tilesState[0] === CartOpenTypes.BuyCellsMode
-                                    || (tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length === 1))
-                                && <div className="flex-cnt item wrap justify-start fb-10">
-                                    {
-                                        tilesState[1].map(cellData =>
-                                            <div
-                                                key={ cellData.cellNumber }
-                                                className="flex-cnt item wrap fb-10 align-center shrink mx-1 px-3 py-1"
-                                                style={ { marginBottom: 8, backgroundColor: 'white' } }
-                                            >
-                                                <div className="flex-cnt item fb-4 shrink">
-                                                    <Button color="header" textAlign="left" noActive title="price (Eth)" small />
-                                                </div>
-                                                <div className="flex-cnt item justify-end fb-4">
-                                                    <Button color="info" noActive title={ `# ${cellData.cellNumber + 1}` } small />
-                                                </div>
-                                                <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                    <Input color="header" event$={ input$ } action="price" value={ cellData.token ? '' + cellData.token.price : '' } />
-                                                </div>
-                                                <div className="flex-cnt item fb-4 shrink">
-                                                    <Button color="close" textAlign="left" noActive title="image url" small />
-                                                </div>
-                                                <div className="flex-cnt item fb-10 mt-1 mb-4">
-                                                    <Input event$={ input$ } action="url" value={ cellData.tile ? cellData.tile.url || '' : '' } />
-                                                </div>
-                                                <div className="flex-cnt item fb-4 shrink">
-                                                    <Button color="close" textAlign="left" noActive title="title" small />
-                                                </div>
-                                                <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                    <Input event$={ input$ } action="title" color="header" value={ cellData.tile ? '' + cellData.tile.title : '' } />
-                                                </div>
-                                                <div className="flex-cnt item fb-4 shrink">
-                                                    <Button color="close" textAlign="left" noActive title="bounded tiles" small />
-                                                </div>
-                                                <div className="flex-cnt item shrink fb-10 wrap">
-                                                    {
-                                                        cellData.tile &&
-                                                        cellData.tile.boundedTiles.map(x =>
-                                                            <div key={ x.toString() } className="flex-cnt item shrink my-1 mx-2">
-                                                                <Button color="base" noActive title={ x.toString() } small />
-                                                            </div>
-                                                        )
-                                                    }
-                                                </div>
-                                                <div className="flex-cnt item fb-4 mt-4 shrink">
-                                                    <Button color="close" textAlign="center" noActive title="owner address" small />
-                                                </div>
-                                                <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                    <Input noActive color="header" value={ cellData.tile ? '' + cellData.tile.owner : '' } />
-                                                </div>
+                                ))}
+                            {(tilesState[0] === CartOpenTypes.BuyCellsMode ||
+                                (tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length === 1)) && (
+                                <div className="flex-cnt item wrap justify-start fb-10">
+                                    {tilesState[1].map((cellData) => (
+                                        <div
+                                            key={cellData.cellNumber}
+                                            className="flex-cnt item wrap fb-10 align-center shrink mx-1 px-3 py-1"
+                                            style={{ marginBottom: 8, backgroundColor: 'white' }}
+                                        >
+                                            <div className="flex-cnt item fb-4 shrink">
+                                                <Button color="header" textAlign="left" noActive title="price (Eth)" small />
                                             </div>
-                                        )
-                                    }
+                                            <div className="flex-cnt item justify-end fb-4">
+                                                <Button light color="info" noActive title={`# ${cellData.cellNumber + 1}`} small />
+                                            </div>
+                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
+                                                <Input
+                                                    color="header"
+                                                    event$={input$}
+                                                    action="price"
+                                                    value={cellData.token ? '' + cellData.token.price : ''}
+                                                />
+                                            </div>
+                                            <div className="flex-cnt item fb-4 shrink">
+                                                <Button color="close" textAlign="left" noActive title="image url" small />
+                                            </div>
+                                            <div className="flex-cnt item fb-10 mt-1 mb-4">
+                                                <Input
+                                                    event$={input$}
+                                                    action="url"
+                                                    value={cellData.tile ? cellData.tile.url || '' : ''}
+                                                />
+                                            </div>
+                                            <div className="flex-cnt item fb-4 shrink">
+                                                <Button color="close" textAlign="left" noActive title="title" small />
+                                            </div>
+                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
+                                                <Input
+                                                    event$={input$}
+                                                    action="title"
+                                                    color="header"
+                                                    value={cellData.tile ? '' + cellData.tile.title : ''}
+                                                />
+                                            </div>
+                                            <div className="flex-cnt item fb-4 shrink">
+                                                <Button
+                                                    color="close"
+                                                    textAlign="left"
+                                                    noActive
+                                                    title="bounded tiles"
+                                                    small
+                                                />
+                                            </div>
+                                            <div className="flex-cnt item shrink fb-10 wrap">
+                                                {cellData.tile &&
+                                                    cellData.tile.boundedTiles.map((x, i) => (
+                                                        <div key={x} className="flex-cnt item shrink my-1 mx-2">
+                                                            <Button
+                                                                color={!i ? 'info' : 'base'}
+                                                                light={!i}
+                                                                noActive
+                                                                title={x + 1}
+                                                                small
+                                                            />
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                            <div className="flex-cnt item fb-4 mt-4 shrink">
+                                                <Button
+                                                    color="close"
+                                                    textAlign="center"
+                                                    noActive
+                                                    title="owner address"
+                                                    small
+                                                />
+                                            </div>
+                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
+                                                <Input
+                                                    noActive
+                                                    color="header"
+                                                    value={cellData.tile ? '' + cellData.tile.owner : ''}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
                                 </div>
-                            }
+                            )}
                         </div>
                     </div>
                 </Modal>
