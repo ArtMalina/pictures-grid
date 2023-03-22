@@ -2,7 +2,7 @@
   "name": "vite-pictures-grid",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "homepage": "https://artmalina.github.io/pictures-grid",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
