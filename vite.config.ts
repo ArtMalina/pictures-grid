@@ -9,6 +9,7 @@ export default defineConfig({
   build: {
     outDir: 'build',
     target: 'es2015',
+    rollupOptions: {}
   },
   resolve: {
     alias: {

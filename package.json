@@ -1,6 +1,6 @@
 {
-  "name": "vite-pictures-grid",
-  "private": true,
+  "name": "pictures-grid",
+  "private": false,
   "version": "0.0.0",
   "homepage": "https://artmalina.github.io/pictures-grid",
   "scripts": {
