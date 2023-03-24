@@ -5,8 +5,10 @@ import path from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: './',
   build: {
     outDir: 'build',
+    target: 'es2015',
   },
   resolve: {
     alias: {
