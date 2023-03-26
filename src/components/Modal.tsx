@@ -3,7 +3,6 @@ import { Subject } from 'rxjs/internal/Subject';
 import { CartEvents, TilesEventCart } from '../interfaces/cells';
 import Button from './Button';
 
-
 export interface IModalProps {
     title: string;
     width: number;
@@ -17,7 +16,7 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
     const [state, setState] = useState<TilesEventCart>({ type: CartEvents.Close, payload: [], groupUrl: '' });
     useEffect(() => {
         console.log('useEffect in modal....');
-        const sub = event$.subscribe(ev => {
+        const sub = event$.subscribe((ev) => {
             console.log('ev in modal: ', ev);
             if ([CartEvents.Modify, CartEvents.Open].includes(ev.type)) setState(ev);
         });
@@ -28,35 +27,41 @@ const Modal = (props: PropsWithChildren<IModalProps>) => {
 
     if (!open) return null;
 
-    const ifNewCell = !!state.payload.filter(t => !t.token && !t.tile).length;
-    let BTN_TITLE = state && state.type === CartEvents.Modify ? "Save" : "Buy";
-    BTN_TITLE = state && state.type === CartEvents.Open ? "Buy" : BTN_TITLE;
+    const ifNewCell = !!state.payload.filter((t) => !t.token && !t.tile).length;
+    let BTN_TITLE = state && state.type === CartEvents.Modify ? 'Save' : 'Buy';
+    BTN_TITLE = state && state.type === CartEvents.Open ? 'Buy' : BTN_TITLE;
     BTN_TITLE = ifNewCell ? 'Mint' : BTN_TITLE;
 
-    const EV_NAME = state && state.type === CartEvents.Open || ifNewCell ? CartEvents.Buy : CartEvents.Save;
+    const isBuy = (state && state.type === CartEvents.Open) || ifNewCell;
+
+    const EV_NAME = isBuy ? CartEvents.Buy : CartEvents.Save;
+
+    const cellsCost = isBuy ? state?.payload?.map((t) => (!t.token ? 1 : Number(t.token?.price))).reduce((acc, n) => acc + n, 0) : '';
 
     return (
         <div id="modal-overlay-cnt">
-            <div id="modal-cnt" style={ { width, height, top: '25%', marginLeft: -0.5 * width } }>
+            <div id="modal-cnt" style={{ width, height, top: '25%', marginLeft: -0.5 * width }}>
                 <div className="header">
-                    <Button light color="header" noActive title={ title } />
+                    <Button light color="header" noActive title={title} />
                     <div className="flex-cnt">
                         <Button
-                            event$={ event$ }
-                            action={ { type: EV_NAME, payload: [] } }
+                            event$={event$}
+                            action={{ type: EV_NAME, payload: [] }}
                             light
                             color="active"
-                            title={ BTN_TITLE } />
+                            title={cellsCost ? BTN_TITLE + ' -' + cellsCost + ' eth' : BTN_TITLE}
+                        />
                         <div className="flex-cnt item mx-1"></div>
                         <Button
-                            event$={ event$ }
-                            action={ { type: CartEvents.Close, payload: [] } }
+                            event$={event$}
+                            action={{ type: CartEvents.Close, payload: [] }}
                             light
                             color="close"
-                            title="Close" />
+                            title="Close"
+                        />
                     </div>
                 </div>
-                <div className="content">{ props.children }</div>
+                <div className="content">{props.children}</div>
                 <div className="footer"></div>
             </div>
         </div>

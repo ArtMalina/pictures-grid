@@ -131,7 +131,7 @@ const CartModal = (props: ICartModalProps) => {
             {
                 <Modal
                     title="Crypto tiles"
-                    width={770}
+                    width={850}
                     height={450}
                     event$={cartEvent$}
                     open={tilesState[0] !== CartOpenTypes.None}
@@ -172,84 +172,120 @@ const CartModal = (props: ICartModalProps) => {
                                 (tilesState[0] === CartOpenTypes.ModifyCellsMode && tilesState[1].length === 1)) && (
                                 <div className="flex-cnt item wrap justify-start fb-10">
                                     {tilesState[1].map((cellData) => (
-                                        <div
-                                            key={cellData.cellNumber}
-                                            className="flex-cnt item wrap fb-10 align-center shrink mx-1 px-3 py-1"
-                                            style={{ marginBottom: 8, backgroundColor: 'white' }}
-                                        >
-                                            <div className="flex-cnt item fb-4 shrink">
-                                                <Button color="header" textAlign="left" noActive title="price (Eth)" small />
-                                            </div>
-                                            <div className="flex-cnt item justify-end fb-4">
-                                                <Button light color="info" noActive title={`# ${cellData.cellNumber + 1}`} small />
-                                            </div>
-                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                <Input
-                                                    color="header"
-                                                    event$={input$}
-                                                    action="price"
-                                                    value={cellData.token ? '' + cellData.token.price : ''}
-                                                />
-                                            </div>
-                                            <div className="flex-cnt item fb-4 shrink">
-                                                <Button color="close" textAlign="left" noActive title="image url" small />
-                                            </div>
-                                            <div className="flex-cnt item fb-10 mt-1 mb-4">
-                                                <Input
-                                                    event$={input$}
-                                                    action="url"
-                                                    value={cellData.tile ? cellData.tile.url || '' : ''}
-                                                />
-                                            </div>
-                                            <div className="flex-cnt item fb-4 shrink">
-                                                <Button color="close" textAlign="left" noActive title="title" small />
-                                            </div>
-                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                <Input
-                                                    event$={input$}
-                                                    action="title"
-                                                    color="header"
-                                                    value={cellData.tile ? '' + cellData.tile.title : ''}
-                                                />
-                                            </div>
-                                            <div className="flex-cnt item fb-4 shrink">
+                                        <div key={cellData.cellNumber} className="flex-cnt wrap mb-5">
+                                            <div className="flex-cnt item">
                                                 <Button
-                                                    color="close"
-                                                    textAlign="left"
+                                                    color="secondary"
                                                     noActive
-                                                    title="bounded tiles"
+                                                    title={`# ${cellData.cellNumber + 1}`}
                                                     small
                                                 />
                                             </div>
-                                            <div className="flex-cnt item shrink fb-10 wrap">
-                                                {cellData.tile &&
-                                                    cellData.tile.boundedTiles.map((x, i) => (
-                                                        <div key={x} className="flex-cnt item shrink my-1 mx-2">
-                                                            <Button
-                                                                color={!i ? 'info' : 'base'}
-                                                                light={!i}
-                                                                noActive
-                                                                title={x + 1}
-                                                                small
+                                            <div
+                                                className="flex-cnt item wrap fb-8 align-center shrink px-3 py-1"
+                                                style={{ marginBottom: 8, backgroundColor: 'white' }}
+                                            >
+                                                <div className="flex-cnt item wrap fb-10">
+                                                    <div className="flex-cnt item fb-5 shrink wrap mb-4">
+                                                        <Button
+                                                            color="header"
+                                                            textAlign="left"
+                                                            noActive
+                                                            title="price (Eth)"
+                                                            small
+                                                        />
+                                                        <div className="flex-cnt item shrink fb-9 mt-1">
+                                                            <Input
+                                                                color="header"
+                                                                event$={input$}
+                                                                action="price"
+                                                                value={cellData.token ? '' + cellData.token.price : ''}
                                                             />
                                                         </div>
-                                                    ))}
-                                            </div>
-                                            <div className="flex-cnt item fb-4 mt-4 shrink">
-                                                <Button
-                                                    color="close"
-                                                    textAlign="center"
-                                                    noActive
-                                                    title="owner address"
-                                                    small
-                                                />
-                                            </div>
-                                            <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
-                                                <Input
-                                                    noActive
-                                                    color="header"
-                                                    value={cellData.tile ? '' + cellData.tile.owner : ''}
-                                                />
+                                                    </div>
+                                                    <div className="flex-cnt item fb-5 shrink wrap justify-end mb-4">
+                                                        <Button
+                                                            color="header"
+                                                            textAlign="right"
+                                                            noActive
+                                                            title="current price (Eth)"
+                                                            small
+                                                        />
+                                                        <div className="flex-cnt item shrink fb-9 mt-1">
+                                                            <Input
+                                                                color="header"
+                                                                noActive
+                                                                value={cellData.token ? '' + cellData.token.price : '1'}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex-cnt item fb-4 shrink">
+                                                    <Button
+                                                        color="close"
+                                                        textAlign="left"
+                                                        noActive
+                                                        title="image url"
+                                                        small
+                                                    />
+                                                </div>
+                                                <div className="flex-cnt item fb-10 mt-1 mb-4">
+                                                    <Input
+                                                        event$={input$}
+                                                        action="url"
+                                                        value={cellData.tile ? cellData.tile.url || '' : ''}
+                                                    />
+                                                </div>
+                                                <div className="flex-cnt item fb-4 shrink">
+                                                    <Button color="close" textAlign="left" noActive title="title" small />
+                                                </div>
+                                                <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
+                                                    <Input
+                                                        event$={input$}
+                                                        action="title"
+                                                        color="header"
+                                                        value={cellData.tile ? '' + cellData.tile.title : ''}
+                                                    />
+                                                </div>
+                                                <div className="flex-cnt item fb-4 shrink">
+                                                    <Button
+                                                        color="close"
+                                                        textAlign="left"
+                                                        noActive
+                                                        title="bounded tiles"
+                                                        small
+                                                    />
+                                                </div>
+                                                <div className="flex-cnt item shrink fb-10 wrap">
+                                                    {cellData.tile &&
+                                                        cellData.tile.boundedTiles.map((x, i) => (
+                                                            <div key={x} className="flex-cnt item shrink my-1 mx-2">
+                                                                <Button
+                                                                    color={!i ? 'info' : 'base'}
+                                                                    light={!i}
+                                                                    noActive
+                                                                    title={x + 1}
+                                                                    small
+                                                                />
+                                                            </div>
+                                                        ))}
+                                                </div>
+                                                <div className="flex-cnt item fb-4 mt-4 shrink">
+                                                    <Button
+                                                        color="close"
+                                                        textAlign="center"
+                                                        noActive
+                                                        title="owner address"
+                                                        small
+                                                    />
+                                                </div>
+                                                <div className="flex-cnt item shrink fb-10 mt-1 mb-4">
+                                                    <Input
+                                                        noActive
+                                                        color="header"
+                                                        value={cellData.tile ? '' + cellData.tile.owner : ''}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
