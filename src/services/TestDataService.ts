@@ -1,4 +1,5 @@
 import { FirebaseApp, initializeApp } from "firebase/app";
+import Web3 from 'web3';
 import {
     getFirestore,
     collection,
@@ -90,7 +91,7 @@ const tokenToFirebaseMapper = (item: ContractTokenInfo): any => {
 };
 
 export default class DataService implements IDataService {
-    private _account: AccountAddr | null = null;
+    private _account: AccountAddr | null = EMPTY_ADDR;
     private _state: BehaviorSubject<DataServiceState> = new BehaviorSubject<DataServiceState>({
         lastUpdate: 0,
         tileCells: []
@@ -99,6 +100,11 @@ export default class DataService implements IDataService {
     private _db: Firestore;
     private _tilesCollection: CollectionReference;
     private _tokensCollection: CollectionReference;
+
+    private _web3: Web3 | null = null;
+
+    private _provider: any = null;
+
     constructor() {
         this._firebaseApp = initializeApp(testFirebaseConfig);
         this._db = getFirestore(this._firebaseApp);
@@ -109,7 +115,25 @@ export default class DataService implements IDataService {
         return this._state;
     }
     connect(): Promise<boolean> {
-        this._account = TEST_OWNER_ADDR;
+        if (Web3.givenProvider) {
+            this._web3 = new Web3(Web3.givenProvider || 'ws://some.local-or-remote.node:8546');
+            console.log('%cbrowser supports web3!', 'background: green;color:white', this._web3?.version);
+            console.log('%cweb3--->', 'background: blue;color:white', this._web3);
+            this._provider = this._web3?.currentProvider;
+            console.log('%cweb3--->', 'background: darkcyan;color:white', this._provider?.chainId);
+            // this._provider?.enable();
+            return this._web3.eth.requestAccounts().
+                then(response => {
+                    console.log('.....requestAccounts response -> ', response);
+                    this._account = response[0] as AccountAddr || EMPTY_ADDR;
+                    return Promise.resolve(true);
+                }).
+                catch(err => {
+                    console.log('.....requestAccounts err', err);
+                    return Promise.resolve(false);
+                });
+        }
+
         return new Promise(resolve => setTimeout(() => resolve(true), 2000));
     }
     getAccount(): AccountAddr | null {

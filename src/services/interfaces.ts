@@ -1,11 +1,25 @@
 ﻿import { BehaviorSubject } from "rxjs/internal/BehaviorSubject";
 import { ITileState, IUnmintedTileState } from "../interfaces/cells";
+import { ReactNode } from "react";
+import { Subject } from "rxjs";
 
 export type AccountAddr = string & { _TYPE_: "AccountAddr" };
 export type ContractTokenID = number & { _TYPE_: "ContractTokenID" };
 export type ContractTileID = number & { _TYPE_: "ContractTileID" };
 
 export const EMPTY_ADDR = "<no-account>" as AccountAddr;
+
+export interface INotifyMessage {
+    type: 'warning' | 'error' | 'info' | 'success';
+    title?: string;
+    text: ReactNode;
+    width?: number;
+    height?: number;
+}
+
+export interface INotifyContext {
+    bus$: Subject<INotifyMessage>;
+}
 
 
 export type FormTileData = {

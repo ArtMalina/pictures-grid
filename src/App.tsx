@@ -16,15 +16,18 @@ import { CellsEvent } from './containers/CellsLayout/CellsLayout';
 
 import ServiceContext from './contexts/ServiceContext';
 import TestDataService from './services/TestDataService';
+import NotifyContext, { notifyService } from './contexts/NotifyContext';
+
+import MyNotification from './containers/MyNotification';
 
 import { AccountAddr, EMPTY_ADDR } from './services/interfaces';
 import useCartStateForCellsAndService from './hooks/useCartStateForCellsAndService';
 import useCartEventsToCartState from './hooks/useCartEventsToCartState';
 import useCellEventsForSelectedCells from './hooks/useCellEventsForSelectedCells';
+import Button from '@components/Button';
 
 const App = () => {
     const cellSize: [number, number] = [appConfig.cellWidth, appConfig.cellHeight];
-    console.log('%c render global app! ', 'border: 2px solid red; color: silver; background-color: darkblue;');
 
     const dataService = useMemo(() => new TestDataService(), []);
 
@@ -47,11 +50,24 @@ const App = () => {
             .connect()
             .then((isOk) => {
                 const acc = dataService.getAccount();
+                notifyService.bus$.next({
+                    type: 'success',
+                    title: 'Connected!',
+                    width: 580,
+                    text: (
+                        <div className="py-2">
+                            <Button color="secondary" noActive title="MetaMask has been connected with account" />
+                            <div className="py-2">
+                                <Button color="base" noActive title={acc || ''} small textAlign="left" />
+                            </div>
+                        </div>
+                    ),
+                });
                 acc && currentAcc$.next(acc);
                 dataService.fetchTiles().then((tiles) => console.log('%c items loaded! ', 'color: green', [...tiles]));
             })
             .catch((err) => {});
-    }, [dataService, currentAcc$]);
+    }, [dataService, currentAcc$, notifyService.bus$]);
 
     useCellEventsForSelectedCells({
         cellEvent$,
@@ -76,17 +92,20 @@ const App = () => {
     return (
         <div id="app-container">
             <ServiceContext.Provider value={dataService}>
-                <Header event$={cartEvent$} selectedCells$={selectedCells$} />
-                <CellsLayout
-                    cellSize={cellSize}
-                    currentAcc$={currentAcc$}
-                    cellsAmount={appConfig.cellsAmount}
-                    cellBorderWidth={appConfig.cellBorderWidth}
-                    maxCanvasWidth={appConfig.maxCanvasWidth || 0}
-                    event$={cellEvent$}
-                    cellsUpdate$={cellsUpdate$}
-                />
-                <CartModal event$={cartState$} />
+                <NotifyContext.Provider value={notifyService}>
+                    <Header event$={cartEvent$} selectedCells$={selectedCells$} />
+                    <CellsLayout
+                        cellSize={cellSize}
+                        currentAcc$={currentAcc$}
+                        cellsAmount={appConfig.cellsAmount}
+                        cellBorderWidth={appConfig.cellBorderWidth}
+                        maxCanvasWidth={appConfig.maxCanvasWidth || 0}
+                        event$={cellEvent$}
+                        cellsUpdate$={cellsUpdate$}
+                    />
+                    <CartModal event$={cartState$} />
+                    <MyNotification />
+                </NotifyContext.Provider>
             </ServiceContext.Provider>
         </div>
     );

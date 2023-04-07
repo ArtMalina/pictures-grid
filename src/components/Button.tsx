@@ -15,17 +15,20 @@ export interface IButtonProps<T = any> {
     small?: boolean;
     color?: 'header' | 'base' | 'active' | 'primary' | 'secondary' | 'info' | 'error' | 'close';
     event$?: Subject<ICartEventData | T>;
+    onClick?: () => void;
 }
 
 const Button = (props: PropsWithChildren<IButtonProps>) => {
-    const { title, event$, toggle, noActive, light, small, color, action, group, noBraces, fullWidth, textAlign } = props;
+    const { title, event$, toggle, noActive, light, small, color, action, group, noBraces, fullWidth, textAlign, onClick } =
+        props;
     const onClickHandler = useCallback(
         (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
             event.stopPropagation();
             event.preventDefault();
+            onClick && onClick();
             event$ && event$.next(action ? { ...action, group } : { type: CartEvents.Close, payload: [] });
         },
-        [event$, action, group]
+        [event$, action, group, onClick]
     );
 
     const modifiersTxt = [

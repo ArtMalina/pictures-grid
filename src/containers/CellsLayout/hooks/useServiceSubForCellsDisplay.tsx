@@ -55,13 +55,6 @@ export default function useServiceSubForCellsDisplay({
                 // new \ updated Tile
                 contractTilesData[tileData.cellNumber] = [val.lastUpdate, { ...tileData }];
                 if (!updatesRef[tileData.cellNumber] || updatesRef[tileData.cellNumber] < tileData.tile.version + 1) {
-                    console.log('tile', tileData, cellEventOfIndex, [...cellEvents]);
-                    console.log(
-                        'contractTilesData:cellNumber',
-                        tileData.cellNumber,
-                        tileData.tile.version,
-                        contractTilesData[tileData.cellNumber]
-                    );
                     updatesRef[tileData.cellNumber] = tileData.tile.version + 1;
                     displayingUpdatedTiles.push({ ...tileData });
                     if (cellEventOfIndex[tileData.cellNumber] > 0) {
